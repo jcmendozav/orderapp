@@ -5,15 +5,15 @@ import { Auth } from 'aws-amplify'
 import DateTimePicker from 'react-datetime-picker';
 
 
-import API, { graphqlOperation } from '@aws-amplify/api';
-const apiName = 'api927be96a'; // replace this with your api name.
-const path = '/orders'; //replace this with the path you have configured on your API
-const myInit = {
-  body: {}, // replace this with attributes you need
-  headers: {
-    "Access-Control-Allow-Origin": "*"
-  }, // OPTIONAL
-};
+// import API, { graphqlOperation } from '@aws-amplify/api';
+// const apiName = 'api927be96a'; // replace this with your api name.
+// const path = '/orders'; //replace this with the path you have configured on your API
+// const myInit = {
+//   body: {}, // replace this with attributes you need
+//   headers: {
+//     "Access-Control-Allow-Origin": "*"
+//   }, // OPTIONAL
+// };
 
 Storage.configure({
   customPrefix: {
@@ -31,8 +31,8 @@ const AddOrder = () => {
     // id: null,
     // title: "",
     orderType: "pushMailScheduledWithQuota",
-    quota: 0,
-    time: 0,
+    quota: 10,
+    time: 60,
     scheduleDate: new Date(),
     inputData: ""
   };
@@ -83,7 +83,7 @@ const AddOrder = () => {
     // const { name, value } = event.target;
     // setOrder({ ...Order, [name]: value });
     console.log(event.toISOString());
-    setOrder({ ...Order,scheduleDate: event });
+    setOrder({ ...Order, scheduleDate: event });
     console.log(Order);
 
     onDateChange(event);
@@ -149,7 +149,7 @@ const AddOrder = () => {
     <div className="submit-form">
       {submitted ? (
         <div>
-          <h4>You submitted successfully!</h4>
+          <h4>You submitted successfully! {Order.id}</h4>
           <button className="btn btn-success" onClick={newOrder}>
             Add
           </button>
@@ -197,7 +197,7 @@ const AddOrder = () => {
               />
             </div> */}
             <div className="form-group">
-            <label htmlFor="scheduleDate">Schedule Date</label>
+              <label htmlFor="scheduleDate">Schedule Date</label>
               <DateTimePicker
                 id="scheduleDate"
                 className="form-control"

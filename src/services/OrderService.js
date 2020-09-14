@@ -13,8 +13,12 @@ const create = data => {
   return http.post("/orders", data);
 };
 
-const update = (id, data) => {
-  return http.put(`/orders/${id}`, data);
+// const update = (id, data) => {
+//   return http.put(`/orders/${id}`, data);
+// };
+
+const update = data => {
+  return http.put("/orders", data);
 };
 
 const remove = id => {

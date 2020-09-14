@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from "react";
 import OrderDataService from "../services/OrderService";
 import { Link } from "react-router-dom";
+import { Auth } from 'aws-amplify'
+import DateHelper from "../util/date";
 
+const orderStatus = {
+  0: "CREATED",
+  1: "INPROGRESS",
+  2: "DONE",
+  3: "PAUSED",
+  4: "DELETED"
+};
 const OrdersList = () => {
   const [Orders, setOrders] = useState([]);
   const [currentOrder, setCurrentOrder] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [searchTitle, setSearchTitle] = useState("");
+  const [searchId, setSearchId] = useState("");
 
   useEffect(() => {
     retrieveOrders();
@@ -17,8 +27,12 @@ const OrdersList = () => {
     setSearchTitle(searchTitle);
   };
 
+  const onChangeSearchId = e => {
+    const orderId = e.target.value;
+    setSearchId(orderId);
+  };
   const retrieveOrders = () => {
-    OrderDataService.getAll()
+    OrderDataService.findByUserId(Auth.user.username)
       .then(response => {
         setOrders(response.data);
         console.log(response.data);
@@ -60,7 +74,22 @@ const OrdersList = () => {
         console.log(e);
       });
   };
+  const findById = () => {
+    OrderDataService.get(searchId)
+      .then(response => {
+        let result = response.data;
+        if (!Array.isArray(result)) {
+          result = [response.data];
+        }
 
+
+        setOrders(result);
+        console.log(result);
+      })
+      .catch(e => {
+        console.log(e);
+      });
+  };
   return (
     <div className="list row">
       <div className="col-md-8">
@@ -68,15 +97,15 @@ const OrdersList = () => {
           <input
             type="text"
             className="form-control"
-            placeholder="Search by title"
-            value={searchTitle}
-            onChange={onChangeSearchTitle}
+            placeholder="Search by id"
+            value={searchId}
+            onChange={onChangeSearchId}
           />
           <div className="input-group-append">
             <button
               className="btn btn-outline-secondary"
               type="button"
-              onClick={findByTitle}
+              onClick={findById}
             >
               Search
             </button>
@@ -96,17 +125,12 @@ const OrdersList = () => {
                 onClick={() => setActiveOrder(Order, index)}
                 key={index}
               >
-                {Order.title}
+                {Order.id}
               </li>
             ))}
         </ul>
 
-        <button
-          className="m-3 btn btn-sm btn-danger"
-          onClick={removeAllOrders}
-        >
-          Remove All
-        </button>
+
       </div>
       <div className="col-md-6">
         {currentOrder ? (
@@ -114,23 +138,41 @@ const OrdersList = () => {
             <h4>Order</h4>
             <div>
               <label>
-                <strong>Title:</strong>
+                <strong>id:</strong>
               </label>{" "}
-              {currentOrder.title}
+              {currentOrder.id}
             </div>
             <div>
               <label>
-                <strong>Description:</strong>
+                <strong>Type:</strong>
               </label>{" "}
-              {currentOrder.description}
+              {currentOrder.orderType}
+            </div>
+            <div>
+              <label>
+                <strong>Creation Date:</strong>
+              </label>{" "}
+              {
+                // DateHelper.convertUTCDateToLocalDate(new Date(currentOrder.creationDate))
+                currentOrder.creationDate
+              }
             </div>
             <div>
               <label>
                 <strong>Status:</strong>
               </label>{" "}
-              {currentOrder.published ? "Published" : "Pending"}
+              {orderStatus[currentOrder.status]}
             </div>
-
+            <div>
+              <label>
+                <strong>Details:</strong>
+              </label>{" "}
+              {/* {JSON.stringify(currentOrder.details)} */}
+              <textarea className="form-control" id="details"
+                name="details"
+                value={JSON.stringify(currentOrder.details)}
+              />
+            </div>
             <Link
               to={"/Orders/" + currentOrder.id}
               className="badge badge-warning"
@@ -139,11 +181,11 @@ const OrdersList = () => {
             </Link>
           </div>
         ) : (
-          <div>
-            <br />
-            <p>Please click on a Order...</p>
-          </div>
-        )}
+            <div>
+              <br />
+              <p>Please click on a Order...</p>
+            </div>
+          )}
       </div>
     </div>
   );
