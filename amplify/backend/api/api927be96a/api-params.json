@@ -1,0 +1,42 @@
+{
+    "paths": [
+        {
+            "name": "/orders",
+            "lambdaFunction": "orderapp658015a0",
+            "privacy": {
+                "private": true,
+                "auth": [
+                    "/POST",
+                    "/GET",
+                    "/PUT",
+                    "/PATCH",
+                    "/DELETE"
+                ]
+            },
+            "policyResourceName": "/orders"
+        }
+    ],
+    "resourceName": "api927be96a",
+    "apiName": "api927be96a",
+    "functionArns": [
+        {
+            "lambdaFunction": "orderapp658015a0"
+        }
+    ],
+    "privacy": {
+        "auth": 1,
+        "unauth": 0,
+        "authRoleName": "amplify-orderapp-dev-204740-authRole",
+        "unAuthRoleName": "amplify-orderapp-dev-204740-unauthRole"
+    },
+    "dependsOn": [
+        {
+            "category": "function",
+            "resourceName": "orderapp658015a0",
+            "attributes": [
+                "Name",
+                "Arn"
+            ]
+        }
+    ]
+}
