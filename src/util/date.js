@@ -1,8 +1,9 @@
 const convertUTCDateToLocalDate = date => {
-    var newDate = new Date(date.getTime() + date.getTimezoneOffset() * 60 * 1000);
+    var currentDate = new Date(date);
+    var newDate = new Date(currentDate.getTime() + currentDate.getTimezoneOffset() * 60 * 1000);
 
-    var offset = date.getTimezoneOffset() / 60;
-    var hours = date.getHours();
+    var offset = currentDate.getTimezoneOffset() / 60;
+    var hours = currentDate.getHours();
 
     newDate.setHours(hours - offset);
 

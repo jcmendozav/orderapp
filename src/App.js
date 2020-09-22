@@ -8,6 +8,7 @@ import Order from "./components/Order";
 import OrdersList from "./components/OrdersList";
 
 import { withAuthenticator, AmplifySignOut } from '@aws-amplify/ui-react'
+import { Auth } from 'aws-amplify'
 
 function App() {
   return (
@@ -27,9 +28,16 @@ function App() {
               Add
             </Link>
           </li>
-          <li className="nav-item">
+          {/* <li className="nav-item">
             <AmplifySignOut />
-          </li>
+          </li> */}
+        </div>
+        <div className="navbar-brand">
+          Hello {Auth.user.username} 
+          </div>
+        <div>
+        <AmplifySignOut />
+
         </div>
       </nav>
 

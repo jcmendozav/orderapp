@@ -39,17 +39,20 @@ const AddOrder = () => {
   const [Order, setOrder] = useState(initialOrderState);
   const [submitted, setSubmitted] = useState(false);
   const [value, onDateChange] = useState(new Date());
+  const [newFileName, setNewFileName] = useState('');
+  const [orderError, setOrderError] = useState(false);
 
 
-  const hadleInputFile = async (event) => {
-    // console.log("Inside hadleInputFile");
+  const handleInputFile = async (event) => {
+    // console.log("Inside handleInputFile");
     // console.log(event.target.files);
     // console.log(Auth.user);
     let file = event.target.files[0];
     let fileName = file.name;
     let fileType = file.type;
     let userName = Auth.user.username;
-    let newName = userName + "_" + fileName;
+    var d = new Date();
+    let newName = userName + "_"+d.getTime()+"_" + fileName;
     // let newName = fileName;
     console.log("New file name: " + newName);
     // const { key } = await Storage.put(newName, file, {
@@ -60,6 +63,8 @@ const AddOrder = () => {
         console.log(result);
         setOrder({ ...Order, inputData: newName });
         console.log(Order);
+        setNewFileName(newName);
+
       }
       )
       .catch(err => console.log(err));
@@ -90,7 +95,16 @@ const AddOrder = () => {
 
   };
 
+  const orderFormError = (data) => {
+    if(!data.details.inputData){
+      return "Invalid file name, try again";
+    }
+    return false;
+  };
+
   const saveOrder = () => {
+
+    
     var data = {
       orderType: Order.orderType,
       userId: Auth.user.username,
@@ -101,7 +115,14 @@ const AddOrder = () => {
         time: parseInt(Order.time)
       }
     };
+    const error = orderFormError(data);
+    if(error){
+      setOrderError(error);
+      return;
+    }
+    // if(!Order.inputData){
 
+    // }
     OrderDataService.create(data)
       .then(response => {
         setOrder({
@@ -149,7 +170,8 @@ const AddOrder = () => {
     <div className="submit-form">
       {submitted ? (
         <div>
-          <h4>You submitted successfully! {Order.id}</h4>
+          <h4>You submitted successfully! OrderId:</h4>
+          <h4>{Order.id}</h4>
           <button className="btn btn-success" onClick={newOrder}>
             Add
           </button>
@@ -184,18 +206,7 @@ const AddOrder = () => {
               />
             </div>
 
-            {/* <div className="form-group">
-              <label htmlFor="scheduleDate">Schedule Date</label>
-              <input
-                type="number"
-                className="form-control"
-                id="scheduleDate"
-                required
-                value={Order.scheduleDate}
-                onChange={handleInputChange}
-                name="scheduleDate"
-              />
-            </div> */}
+
             <div className="form-group">
               <label htmlFor="scheduleDate">Schedule Date</label>
               <DateTimePicker
@@ -228,13 +239,21 @@ const AddOrder = () => {
                 accept='text/csv'
                 required
                 value={Order.file}
-                onChange={(e) => hadleInputFile(e)}
+                onChange={(e) => handleInputFile(e)}
                 name="file"
               />
             </div>
-            <button onClick={saveOrder} className="btn btn-success">
+            {orderError && 
+              <label className='error'>{orderError}</label>
+
+          }
+            <div>
+              </div>
+            <button onClick={saveOrder} ena className="btn btn-success">
               Submit
           </button>
+          
+
           </div>
         )}
     </div>

@@ -1,34 +1,16 @@
 {
   "auth": {
-    "orderappa63c7798": {
+    "orderapp3e9aba0d": {
       "service": "Cognito",
       "providerPlugin": "awscloudformation",
       "dependsOn": [],
       "customAuth": false
     }
   },
-  "function": {
-    "orderapp658015a0": {
-      "build": true,
-      "providerPlugin": "awscloudformation",
-      "service": "Lambda",
-      "dependsOn": []
-    }
-  },
-  "api": {
-    "api927be96a": {
-      "service": "API Gateway",
-      "providerPlugin": "awscloudformation",
-      "dependsOn": [
-        {
-          "category": "function",
-          "resourceName": "orderapp658015a0",
-          "attributes": [
-            "Name",
-            "Arn"
-          ]
-        }
-      ]
+  "hosting": {
+    "S3AndCloudFront": {
+      "service": "S3AndCloudFront",
+      "providerPlugin": "awscloudformation"
     }
   }
 }

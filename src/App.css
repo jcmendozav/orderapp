@@ -13,3 +13,5 @@
   max-width: 300px;
   margin: auto;
 }
+
+.error { border: 1px solid red; }

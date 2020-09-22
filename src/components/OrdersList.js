@@ -53,6 +53,10 @@ const OrdersList = () => {
     setCurrentIndex(index);
   };
 
+  const getOrderLabel = (Order) => {
+    return Order.orderType + " " + DateHelper.convertUTCDateToLocalDate(Order.creationDate);
+  };
+
   const removeAllOrders = () => {
     OrderDataService.removeAll()
       .then(response => {
@@ -125,7 +129,8 @@ const OrdersList = () => {
                 onClick={() => setActiveOrder(Order, index)}
                 key={index}
               >
-                {Order.id}
+                {/* {Order.id} */}
+                {getOrderLabel(Order)}
               </li>
             ))}
         </ul>
@@ -153,8 +158,8 @@ const OrdersList = () => {
                 <strong>Creation Date:</strong>
               </label>{" "}
               {
-                // DateHelper.convertUTCDateToLocalDate(new Date(currentOrder.creationDate))
-                currentOrder.creationDate
+                DateHelper.convertUTCDateToLocalDate((currentOrder.creationDate)).toString()
+                // currentOrder.creationDate
               }
             </div>
             <div>
@@ -170,6 +175,7 @@ const OrdersList = () => {
               {/* {JSON.stringify(currentOrder.details)} */}
               <textarea className="form-control" id="details"
                 name="details"
+                readOnly 
                 value={JSON.stringify(currentOrder.details)}
               />
             </div>
