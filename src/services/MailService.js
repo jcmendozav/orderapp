@@ -15,8 +15,12 @@ const findEventsStatsByOrderId = (orderId,timeResolution) => {
   return http.get(`/events/stats?orderId=${orderId}&timeResolution=${timeResolution}`);
 };
 
+const findMailStatsByOrderId = (orderId,timeResolution) => {
+  return http.get(`/mail/stats?orderId=${orderId}&timeResolution=${timeResolution}`);
+};
 
 
 export default {
-  findEventsStatsByOrderId
+  findEventsStatsByOrderId,
+  findMailStatsByOrderId
 };

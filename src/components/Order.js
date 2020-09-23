@@ -33,6 +33,7 @@ const Order = props => {
   };
   const [currentOrder, setCurrentOrder] = useState(initialOrderState);
   const [currentEventStats, setCurrentMailEventStats] = useState([]);
+  const [currentRecordStats, setCurrentMailRecordStats] = useState([]);
   const [message, setMessage] = useState("");
   const [canEditStatus, setCanEditStatus] = useState(false);
   // const [initStatusOption, setInitStatusOption] = useState({});
@@ -69,10 +70,21 @@ const Order = props => {
         console.log(e);
       });
   };
+  const getMailRecordStats = (id, timeResolution = 'year') => {
+    MailService.findMailStatsByOrderId(id, timeResolution)
+      .then(response => {
+        console.log(response.data);
+        setCurrentMailRecordStats(response.data);
+      })
+      .catch(e => {
+        console.log(e);
+      });
+  };
   useEffect(() => {
 
     getOrder(props.match.params.id);
     getMailEventStats(props.match.params.id);
+    getMailRecordStats(props.match.params.id);
   }, [props.match.params.id]);
 
   const handleInputChange = event => {
@@ -145,8 +157,11 @@ const Order = props => {
       });
   };
   const getEventStatLabel = (eventStat) => {
-    // return `Time: ${DateHelper.convertUTCDateToLocalDate(eventStat.creationDate).toISOString()} ,\nType: ${eventStat.eventType} ,\nCounter: ${eventStat.counter} `;
     return `Type: ${eventStat.eventType} ,\nCounter: ${eventStat.counter} `;
+  };
+
+  const getMailRecordStatLabel = (eventStat) => {
+    return `Type: ${eventStat.status} ,\nCounter: ${eventStat.counter} `;
   };
   return (
     <div>
@@ -266,19 +281,21 @@ const Order = props => {
 
             <p>{message}</p>
           </div>
+ 
           <div className="col-md-6">
+            <h4>Mail Records Stats</h4>
+            <ul className="list-group">
+              {currentRecordStats &&
+                currentRecordStats.map((eventStat, index) => (
+                  <li
+                    className="list-group-item"
+                    key={index}
+                  >
+                    {getMailRecordStatLabel(eventStat)}
+                  </li>
+                ))}
+            </ul>
             <h4>Mail Events Stats</h4>
-
-            {/* <textarea
-              className="form-control"
-              id="currentEventStats"
-              name="currentEventStats"
-              readOnly
-              value={JSON.stringify(currentEventStats)}
-            >
-
-            </textarea> */}
-
             <ul className="list-group">
               {currentEventStats &&
                 currentEventStats.map((eventStat, index) => (
@@ -286,18 +303,7 @@ const Order = props => {
                     className="list-group-item"
                     key={index}
                   >
-                    {/* {Order.id} */}
                     {getEventStatLabel(eventStat)}
-
-                    {/* <textarea
-                      className="form-control"
-                      id="details"
-                      name="details"
-                      readOnly
-                      value={getEventStatLabel(eventStat)}
-                    >
-
-                    </textarea> */}
                   </li>
                 ))}
             </ul>
