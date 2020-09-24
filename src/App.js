@@ -7,6 +7,10 @@ import AddOrder from "./components/AddOrder";
 import Order from "./components/Order";
 import OrdersList from "./components/OrdersList";
 
+import AddTemplate from "./components/AddTemplate";
+import Template from "./components/Template";
+import TemplatesList from "./components/TemplatesList";
+
 import { withAuthenticator, AmplifySignOut } from '@aws-amplify/ui-react'
 import { Auth } from 'aws-amplify'
 
@@ -25,7 +29,17 @@ function App() {
           </li>
           <li className="nav-item">
             <Link to={"/add"} className="nav-link">
-              Add
+              Add order
+            </Link>
+          </li>
+          <li className="nav-item">
+            <Link to={"/Templates"} className="nav-link">
+              Templates
+            </Link>
+          </li>
+          <li className="nav-item">
+            <Link to={"/addTemplate"} className="nav-link">
+              Add template
             </Link>
           </li>
           {/* <li className="nav-item">
@@ -46,6 +60,10 @@ function App() {
           <Route exact path={["/", "/Orders"]} component={OrdersList} />
           <Route exact path="/add" component={AddOrder} />
           <Route path="/Orders/:id" component={Order} />
+          <Route exact path={["/", "/Templates"]} component={TemplatesList} />
+          <Route exact path="/addTemplate" component={AddTemplate} />
+          <Route path="/Templates/:id" component={Template} />
+
         </Switch>
       </div>
     </div>

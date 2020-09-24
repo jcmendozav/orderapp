@@ -19,7 +19,6 @@ const findMailStatsByOrderId = (orderId,timeResolution) => {
   return http.get(`/mail/stats?orderId=${orderId}&timeResolution=${timeResolution}`);
 };
 
-
 export default {
   findEventsStatsByOrderId,
   findMailStatsByOrderId
