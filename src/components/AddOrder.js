@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import OrderDataService from "../services/OrderService";
 import Storage from '@aws-amplify/storage'
 import { Auth } from 'aws-amplify'
 import DateTimePicker from 'react-datetime-picker';
+import TemplateDataService from "../services/TemplateService";
+import IdentityService from "../services/IdentityService";
+import Select from 'react-select'
 
 
 // import API, { graphqlOperation } from '@aws-amplify/api';
@@ -31,6 +34,7 @@ const AddOrder = () => {
     // id: null,
     // title: "",
     orderType: "pushMailScheduledWithQuota",
+    configuration: "PilotConfigurationSet",
     quota: 10,
     time: 60,
     scheduleDate: new Date(),
@@ -41,7 +45,55 @@ const AddOrder = () => {
   const [value, onDateChange] = useState(new Date());
   const [newFileName, setNewFileName] = useState('');
   const [orderError, setOrderError] = useState(false);
+  const [templates, setTemplates] = useState([]);
+  const [templatesOption, setTemplatesOption] = useState([]);
+  const [identitiesOption, setIdentitiesOption] = useState([]);
 
+
+  const retrieveTemplates = () => {
+    TemplateDataService.getAll()
+      .then(response => {
+        let sortedTemplates = response.data.slice().sort((a, b) => (new Date(b.CreatedTimestamp)).getTime() - (new Date(a.CreatedTimestamp)).getTime());
+
+        setTemplates(sortedTemplates);
+        setTemplatesOption(sortedTemplates.map(template => {
+          return {
+            value: template.id,
+            label: template.Name
+          }
+        }));
+        console.log(sortedTemplates);
+      })
+      .catch(e => {
+        console.log(e);
+      });
+  };
+
+  const retrieveIdentities = () => {
+    IdentityService.getAll()
+      .then(response => {
+        // let sortedTemplates = response.data.slice().sort((a, b) => (new Date(b.CreatedTimestamp)).getTime() - (new Date(a.CreatedTimestamp)).getTime());
+
+        // setTemplates(sortedTemplates);
+        setIdentitiesOption(response.data.slice()
+          .filter(identity => identity.VerificationStatus === 'Success')
+          .map(identity => {
+            return {
+              value: identity.id,
+              label: identity.identity
+            }
+          }));
+        // console.log(sortedTemplates);
+      })
+      .catch(e => {
+        console.log(e);
+      });
+  };
+
+  useEffect(() => {
+    retrieveTemplates();
+    retrieveIdentities();
+  }, []);
 
   const handleInputFile = async (event) => {
     // console.log("Inside handleInputFile");
@@ -52,7 +104,7 @@ const AddOrder = () => {
     let fileType = file.type;
     let userName = Auth.user.username;
     var d = new Date();
-    let newName = userName + "_"+d.getTime()+"_" + fileName;
+    let newName = userName + "_" + d.getTime() + "_" + fileName;
     // let newName = fileName;
     console.log("New file name: " + newName);
     // const { key } = await Storage.put(newName, file, {
@@ -87,6 +139,7 @@ const AddOrder = () => {
   const handleDateInputChange = event => {
     // const { name, value } = event.target;
     // setOrder({ ...Order, [name]: value });
+    if (!event) return;
     console.log(event.toISOString());
     setOrder({ ...Order, scheduleDate: event });
     console.log(Order);
@@ -96,30 +149,45 @@ const AddOrder = () => {
   };
 
   const orderFormError = (data) => {
-    if(!data.details.inputData){
+    if (!data.inputData) {
       return "Invalid file name, try again";
     }
+    if (!data.template) {
+      return "Invalid template, try again";
+    }
+    if (!data.configuration) {
+      return "Invalid configuration, try again";
+    }
+    if (!data.source) {
+      return "Invalid source, try again";
+    }
+
     return false;
   };
 
   const saveOrder = () => {
 
-    
+    const error = orderFormError(Order);
+    if (error) {
+      setOrderError(error);
+      return;
+    }
     var data = {
       orderType: Order.orderType,
       userId: Auth.user.username,
+      name: Order.orderName,
       details: {
         scheduleDate: Order.scheduleDate.toISOString(),
         inputData: Order.inputData,
         quota: parseInt(Order.quota),
-        time: parseInt(Order.time)
+        time: parseInt(Order.time),
+        configuration: (Order.configuration),
+        template: (Order.template.value),
+        source: (Order.source.value),
+        sourceTitle: (Order.sourceTitle)
       }
     };
-    const error = orderFormError(data);
-    if(error){
-      setOrderError(error);
-      return;
-    }
+
     // if(!Order.inputData){
 
     // }
@@ -167,7 +235,8 @@ const AddOrder = () => {
   };
 
   return (
-    <div className="submit-form">
+    // <div className="submit-form">
+    <div className="list row">
       {submitted ? (
         <div>
           <h4>You submitted successfully! OrderId:</h4>
@@ -177,86 +246,155 @@ const AddOrder = () => {
           </button>
         </div>
       ) : (
-          <div>
-            <div className="form-group">
-              <label htmlFor="orderType">Order Type</label>
-              <input
-                type="text"
-                className="form-control"
-                id="orderType"
-                required
-                value={Order.orderType}
-                onChange={handleInputChange}
-                name="orderType"
-              />
-            </div>
 
 
 
-            <div className="form-group">
-              <label htmlFor="quota">Quota</label>
-              <input
-                type="number"
-                className="form-control"
-                id="quota"
-                required
-                value={Order.quota}
-                onChange={handleInputChange}
-                name="quota"
-              />
-            </div>
+          <div >
+            <h4>Add Order</h4>
+
+            <div className="article-container" >
+              <div className="form-group">
+                <label htmlFor="orderName">Name</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="orderName"
+                  required
+                  // readOnly
+                  value={Order.orderName}
+                  onChange={handleInputChange}
+                  name="orderName"
+                />
+              </div>
+              <div>
+                <label htmlFor="template">Template</label>
+                <Select
+                  // value={options.filter((option) => option.value === currentOrder.status)}
+                  onChange={(event) => handleInputChange({ target: { name: 'template', value: event } })}
+                  options={templatesOption}
+                // isDisabled={!canEditStatus}
+                />
+              </div>
+              <div>
+                <label htmlFor="source">Source</label>
+                <Select
+                  // value={options.filter((option) => option.value === currentOrder.status)}
+                  onChange={(event) => handleInputChange({ target: { name: 'source', value: event } })}
+                  options={identitiesOption}
+                // isDisabled={!canEditStatus}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="sourceTitle">Source Title</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="sourceTitle"
+                  required
+                  // readOnly
+                  value={Order.sourceTitle}
+                  onChange={handleInputChange}
+                  name="sourceTitle"
+                />
+              </div>
+              {/* </div>
+            <div> */}
+              <div className="form-group">
+                <label htmlFor="scheduleDate">Schedule Date</label>
+                <DateTimePicker
+                  id="scheduleDate"
+                  className="form-control"
+                  onChange={handleDateInputChange}
+                  value={Order.scheduleDate}
+                  format="y-MM-ddTHH:mm:ss"
+                  name="scheduleDate"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="quota">Quota</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  id="quota"
+                  required
+                  value={Order.quota}
+                  onChange={handleInputChange}
+                  name="quota"
+                />
+              </div>
 
 
-            <div className="form-group">
-              <label htmlFor="scheduleDate">Schedule Date</label>
-              <DateTimePicker
-                id="scheduleDate"
-                className="form-control"
-                onChange={handleDateInputChange}
-                value={Order.scheduleDate}
-                format="y-MM-ddTHH:mm:ss"
-                name="scheduleDate"
-              />
+
+              <div className="form-group">
+                <label htmlFor="time">Interval</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  id="time"
+                  required
+                  value={Order.time}
+                  onChange={handleInputChange}
+                  name="time"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="time">File</label>
+                <input
+                  type="file"
+                  className="form-control"
+                  id="file"
+                  accept='text/csv'
+                  required
+                  value={Order.file}
+                  onChange={(e) => handleInputFile(e)}
+                  name="file"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="orderType">Order Type</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="orderType"
+                  required
+                  readOnly
+                  value={Order.orderType}
+                  onChange={handleInputChange}
+                  name="orderType"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="configuration">Configuration</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="configuration"
+                  required
+                  readOnly
+                  value={Order.configuration}
+                  onChange={handleInputChange}
+                  name="configuration"
+                />
+              </div>
+
+              <div>
+              </div>
+
             </div>
-            <div className="form-group">
-              <label htmlFor="time">Interval</label>
-              <input
-                type="number"
-                className="form-control"
-                id="time"
-                required
-                value={Order.time}
-                onChange={handleInputChange}
-                name="time"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="time">File</label>
-              <input
-                type="file"
-                className="form-control"
-                id="file"
-                accept='text/csv'
-                required
-                value={Order.file}
-                onChange={(e) => handleInputFile(e)}
-                name="file"
-              />
-            </div>
-            {orderError && 
+            <div>
+            {orderError &&
               <label className='error'>{orderError}</label>
 
-          }
-            <div>
-              </div>
+            }  
+            </div>          
             <button onClick={saveOrder} ena className="btn btn-success">
               Submit
           </button>
-          
-
           </div>
-        )}
-    </div>
+
+        )
+      }
+    </div >
   );
 };
 

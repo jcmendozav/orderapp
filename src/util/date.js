@@ -10,6 +10,18 @@ const convertUTCDateToLocalDate = date => {
     return newDate;
 };
 
+const convertStrDateToLocalDateString = dateStr => {
+    // dateStr must be in ISO format. For example: 2020-08-26T22:42:00.000Z
+    return (new Date(dateStr)).toLocaleString()
+}
+
+const convertUTCDateToLocalDateString = date => {
+    // dateStr must be in ISO format. For example: 2020-08-26T22:42:00.000Z
+    return convertUTCDateToLocalDate(date).toLocaleString()
+}
+
 export default {
-    convertUTCDateToLocalDate
+    convertUTCDateToLocalDate,
+    convertUTCDateToLocalDateString,
+    convertStrDateToLocalDateString
 };

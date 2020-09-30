@@ -3,6 +3,7 @@ import OrderDataService from "../services/OrderService";
 import { Link } from "react-router-dom";
 import { Auth } from 'aws-amplify'
 import DateHelper from "../util/date";
+import OrderUtil from "../util/Order";
 
 const orderStatus = {
   0: "CREATED",
@@ -54,7 +55,7 @@ const OrdersList = () => {
   };
 
   const getOrderLabel = (Order) => {
-    return Order.orderType + " " + DateHelper.convertUTCDateToLocalDate(Order.creationDate);
+    return Object.getOwnPropertyNames(Order).length != 0 ? Order.orderType + " " + DateHelper.convertUTCDateToLocalDateString(Order.creationDate) : JSON.stringify(Order);
   };
 
   const removeAllOrders = () => {
@@ -68,16 +69,6 @@ const OrdersList = () => {
       });
   };
 
-  const findByTitle = () => {
-    OrderDataService.findByTitle(searchTitle)
-      .then(response => {
-        setOrders(response.data);
-        console.log(response.data);
-      })
-      .catch(e => {
-        console.log(e);
-      });
-  };
   const findById = () => {
     OrderDataService.get(searchId)
       .then(response => {
@@ -94,6 +85,8 @@ const OrdersList = () => {
         console.log(e);
       });
   };
+
+
   return (
     <div className="list row">
       <div className="col-md-8">
@@ -147,6 +140,15 @@ const OrdersList = () => {
               </label>{" "}
               {currentOrder.id}
             </div>
+            {currentOrder.name &&
+              <div>
+                <label>
+                  <strong>Name:</strong>
+                </label>{" "}
+                {currentOrder.name}
+              </div>
+            }
+
             <div>
               <label>
                 <strong>Type:</strong>
@@ -158,7 +160,7 @@ const OrdersList = () => {
                 <strong>Creation Date:</strong>
               </label>{" "}
               {
-                DateHelper.convertUTCDateToLocalDate((currentOrder.creationDate)).toString()
+                DateHelper.convertUTCDateToLocalDateString(currentOrder.creationDate)
                 // currentOrder.creationDate
               }
             </div>
@@ -175,8 +177,11 @@ const OrdersList = () => {
               {/* {JSON.stringify(currentOrder.details)} */}
               <textarea className="form-control" id="details"
                 name="details"
-                readOnly 
-                value={JSON.stringify(currentOrder.details)}
+                readOnly
+                value={
+                  OrderUtil.parseDetails(currentOrder.details)
+
+                }
               />
             </div>
             <Link

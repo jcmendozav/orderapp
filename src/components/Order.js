@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import OrderDataService from "../services/OrderService";
+import OrderUtil from "../util/Order";
 import MailService from "../services/MailService";
 import Select from 'react-select'
 import DateHelper from "../util/date";
@@ -15,13 +16,13 @@ const orderStatus = {
   4: "DELETED"
 };
 
-const options = [
-  { value: 0, label: 'CREATED' },
-  { value: 1, label: 'INPROGRESS' },
-  { value: 3, label: 'PAUSED' },
-  { value: 4, label: 'DELETED' },
-  { value: 2, label: 'DONE' }
-]
+// const options = [
+//   { value: 0, label: 'CREATED' },
+//   { value: 1, label: 'INPROGRESS' },
+//   { value: 3, label: 'PAUSED' },
+//   { value: 4, label: 'DELETED' },
+//   { value: 2, label: 'DONE' }
+// ]
 
 
 const Order = props => {
@@ -34,6 +35,7 @@ const Order = props => {
   const [currentOrder, setCurrentOrder] = useState(initialOrderState);
   const [currentEventStats, setCurrentMailEventStats] = useState([]);
   const [currentRecordStats, setCurrentMailRecordStats] = useState([]);
+  const [details, setDetails] = useState([]);
   const [message, setMessage] = useState("");
   const [canEditStatus, setCanEditStatus] = useState(false);
   // const [initStatusOption, setInitStatusOption] = useState({});
@@ -44,7 +46,11 @@ const Order = props => {
         setCurrentOrder(response.data);
         console.log(response.data);
         setCanEditStatus(orderStatus[response.data.status] == "INPROGRESS" || orderStatus[response.data.status] == "PAUSED")
-
+        const detailsDict = response.data.details;
+        // detailsDict['scheduleDate']=DateHelper.convertStrDateToLocalDateString(detailsDict['scheduleDate']);
+        setDetails(
+          OrderUtil.parseDetails(detailsDict)
+          );
         // console.log(canEditStatus);
         // setInitStatusOption(options.filter((option) => option.value===response.data.status));
         // console.log("selected option: ",initStatusOption);
@@ -59,6 +65,7 @@ const Order = props => {
       .then(response => {
         console.log(response.data);
         setCurrentMailEventStats(response.data);
+
         // setCanEditStatus(orderStatus[response.data.status] == "INPROGRESS" || orderStatus[response.data.status] == "PAUSED")
 
         // console.log(canEditStatus);
@@ -87,32 +94,32 @@ const Order = props => {
     getMailRecordStats(props.match.params.id);
   }, [props.match.params.id]);
 
-  const handleInputChange = event => {
-    const { name, value } = event.target;
-    setCurrentOrder({ ...currentOrder, [name]: value });
-  };
-  const handleStatusInputChange = event => {
-    // const { name, value } = event.target;
-    // setOrder({ ...Order, [name]: value });
-    console.log(event);
-    setCurrentOrder({ ...currentOrder, status: event.value });
-    console.log(currentOrder);
+  // const handleInputChange = event => {
+  //   const { name, value } = event.target;
+  //   setCurrentOrder({ ...currentOrder, [name]: value });
+  // };
+  // const handleStatusInputChange = event => {
+  //   // const { name, value } = event.target;
+  //   // setOrder({ ...Order, [name]: value });
+  //   console.log(event);
+  //   setCurrentOrder({ ...currentOrder, status: event.value });
+  //   console.log(currentOrder);
 
-    // onDateChange(event);
+  //   // onDateChange(event);
 
-  };
+  // };
 
 
-  const updateOrder = () => {
-    OrderDataService.update(currentOrder.id, currentOrder)
-      .then(response => {
-        console.log(response.data);
-        setMessage("The Order was updated successfully!");
-      })
-      .catch(e => {
-        console.log(e);
-      });
-  };
+  // const updateOrder = () => {
+  //   OrderDataService.update(currentOrder.id, currentOrder)
+  //     .then(response => {
+  //       console.log(response.data);
+  //       setMessage("The Order was updated successfully!");
+  //     })
+  //     .catch(e => {
+  //       console.log(e);
+  //     });
+  // };
 
 
   const updateStatus = (newStatus) => {
@@ -163,6 +170,10 @@ const Order = props => {
   const getMailRecordStatLabel = (eventStat) => {
     return `Type: ${eventStat.status} ,\nCounter: ${eventStat.counter} `;
   };
+
+  const getOrderDetailLabel = (detail) => {
+    return `${detail.name}: ${detail.value}`;
+  };
   return (
     <div>
       {currentOrder ? (
@@ -181,6 +192,19 @@ const Order = props => {
                 // onChange={handleInputChange}
                 />
               </div>
+              {currentOrder.name &&
+                <div>
+                  <label htmlFor="orderName">Name</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="orderName"
+                    name="orderName"
+                    value={currentOrder.name}
+                  // onChange={handleInputChange}
+                  />
+                </div>
+              }
               <div className="form-group">
                 <label htmlFor="status">Status</label>
                 <input
@@ -220,7 +244,7 @@ const Order = props => {
                   id="creationDate"
                   name="creationDate"
                   // value={DateHelper.convertUTCDateToLocalDate(new Date(currentOrder.creationDate))}
-                  value={(DateHelper.convertUTCDateToLocalDate((currentOrder.creationDate)).toString())}
+                  value={DateHelper.convertUTCDateToLocalDateString(currentOrder.creationDate)}
                 // onChange={handleInputChange}
                 />
               </div>
@@ -237,7 +261,7 @@ const Order = props => {
                 <textarea className="form-control" id="details"
                   name="details"
                   readOnly
-                  value={JSON.stringify(currentOrder.details)}
+                  value={details}
                 >
 
                 </textarea>
@@ -276,12 +300,26 @@ const Order = props => {
             )}
             <button className="badge badge-danger mr-2" onClick={deleteOrder}>
               Delete
-          </button>
+            </button>
 
 
             <p>{message}</p>
           </div>
- 
+          {/* <div className="col-md-6">
+            <h4>Order Details</h4>
+            <ul className="list-group">
+              {details &&
+                details.map((detail, index) => (
+                  <li
+                    className="list-group-item"
+                    key={index}
+                  >
+                    {getOrderDetailLabel(detail)}
+                  </li>
+                ))}
+            </ul>
+          </div> */}
+
           <div className="col-md-6">
             <h4>Mail Records Stats</h4>
             <ul className="list-group">

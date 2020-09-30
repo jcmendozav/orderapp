@@ -24,14 +24,14 @@ const Template = props => {
   const [currentRecordStats, setCurrentMailRecordStats] = useState([]);
   const [message, setMessage] = useState("");
   const [messageResult, setMessageResult] = useState("");
-  const [canEditStatus, setCanEditStatus] = useState(false);
+  const [TemplateError, setTemplateError] = useState(false);
   // const [initStatusOption, setInitStatusOption] = useState({});
   // const isStatusEditable = false;
   const getTemplate = id => {
     TemplateDataService.get(id)
       .then(response => {
         setCurrentTemplate(response.data);
-        console.log(JSON.stringify(response.data));
+        // console.log(JSON.stringify(response.data));
         // setCanEditStatus(TemplateStatus[response.data.status] == "INPROGRESS" || TemplateStatus[response.data.status] == "PAUSED")
 
         // console.log(canEditStatus);
@@ -93,7 +93,7 @@ const Template = props => {
         let result = response.data.result || '';
         result = result.toLowerCase();
         if (result !== 'success') {
-          setMessageResult(JSON.stringify(response.data));
+          setTemplateError(JSON.stringify(response.data));
         } else {
           props.history.push("/Templates");
         }
@@ -105,8 +105,10 @@ const Template = props => {
   return (
     <div>
       {currentTemplate ? (
-        <div className="list row">
-          <div className="col-md-6">
+        <div className="submit-form" >
+        {/* <div className="list row"> */}
+        {/* <div className="col-md-6"> */}
+          <div>
             <h4>Template</h4>
             <form>
 
@@ -117,6 +119,7 @@ const Template = props => {
                   className="form-control"
                   id="TemplateName"
                   required
+                  readOnly
                   value={currentTemplate.TemplateName}
                   onChange={handleInputChange}
                   name="TemplateName"
@@ -170,6 +173,12 @@ const Template = props => {
               </div>
 
             </form>
+            </div>
+            {TemplateError &&
+              <label className='error'>{TemplateError}</label>
+
+            }
+            <div>
 
             <button className="badge badge-danger mr-2" onClick={deleteTemplate}>
               Delete
@@ -178,7 +187,7 @@ const Template = props => {
               Update
           </button>
 
-            <p>{message}</p>
+            <p>{messageResult}</p>
           </div>
 
 

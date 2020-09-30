@@ -52,17 +52,6 @@ const AddTemplate = () => {
 
   const saveTemplate = () => {
 
-
-    // var data = {
-    //   TemplateType: Template.TemplateType,
-    //   userId: Auth.user.username,
-    //   details: {
-    //     scheduleDate: Template.scheduleDate.toISOString(),
-    //     inputData: Template.inputData,
-    //     quota: parseInt(Template.quota),
-    //     time: parseInt(Template.time)
-    //   }
-    // };
     const data = {
       Template: Template
     }
@@ -76,14 +65,22 @@ const AddTemplate = () => {
     // }
     TemplateDataService.create(data)
       .then(response => {
-        setTemplate({
-          id: response.data.TemplateId
-          // title: response.data.title,
-          // description: response.data.description,
-          // published: response.data.published
-        });
-        setSubmitted(true);
-        console.log(response.data);
+
+        let result = response.data.result || '';
+        result = result.toLowerCase();
+        if (result !== 'success') {
+          setTemplateError(JSON.stringify(response.data));
+        }
+        else {
+          setTemplate({
+            id: response.data.id
+            // title: response.data.title,
+            // description: response.data.description,
+            // published: response.data.published
+          });
+          setSubmitted(true);
+          console.log(response.data);
+        }
       })
       .catch(e => {
         console.log(e);
@@ -108,6 +105,8 @@ const AddTemplate = () => {
         </div>
       ) : (
           <div>
+            <h4>Add template</h4>
+
             <div className="form-group">
               <label htmlFor="TemplateName">Name</label>
               <input

@@ -34,8 +34,10 @@ const TemplatesList = () => {
   const retrieveTemplates = () => {
     TemplateDataService.getAll()
       .then(response => {
-        setTemplates(response.data);
-        console.log(response.data);
+        let sortedTemplates = response.data.slice().sort((a,b)=>(new Date(b.CreatedTimestamp)).getTime()-(new Date(a.CreatedTimestamp)).getTime());
+
+        setTemplates(sortedTemplates);
+        console.log(sortedTemplates);
       })
       .catch(e => {
         console.log(e);
@@ -54,7 +56,7 @@ const TemplatesList = () => {
   };
 
   const getTemplateLabel = (Template) => {
-    return `${Template.Name} - ${DateHelper.convertUTCDateToLocalDate(Template.CreatedTimestamp)}`;
+    return `${Template.Name} - ${DateHelper.convertStrDateToLocalDateString(Template.CreatedTimestamp)}`;
   };
 
   const findById = () => {
@@ -66,8 +68,8 @@ const TemplatesList = () => {
         }
 
         // creation date is only available in get all responses
-        console.log(`${JSON.stringify(Templates)}`)
-        console.log(`${JSON.stringify(result)}`)
+        // console.log(`${JSON.stringify(Templates)}`)
+        // console.log(`${JSON.stringify(result)}`)
         // result.forEach(e => e['CreatedTimestamp'] = Templates.filter(t => t['Name'] === e['Name'])[0] );
         const newResult = result.map(e => {
           e['CreatedTimestamp'] = Templates.filter(t => t['Name'] === e['Name'])[0]['CreatedTimestamp'];
@@ -145,7 +147,7 @@ const TemplatesList = () => {
                 <strong>Creation Date:</strong>
               </label>{" "}
               {
-                DateHelper.convertUTCDateToLocalDate((currentTemplate.CreatedTimestamp)).toString()
+                DateHelper.convertStrDateToLocalDateString(currentTemplate.CreatedTimestamp)
                 // currentTemplate.creationDate
               }
             </div>
