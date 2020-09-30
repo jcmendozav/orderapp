@@ -55,7 +55,7 @@ const OrdersList = () => {
   };
 
   const getOrderLabel = (Order) => {
-    return Object.getOwnPropertyNames(Order).length != 0 ? Order.orderType + " " + DateHelper.convertUTCDateToLocalDateString(Order.creationDate) : JSON.stringify(Order);
+    return Object.getOwnPropertyNames(Order).length !== 0 ? Order.orderType + " " + DateHelper.convertUTCDateToLocalDateString(Order.creationDate) : JSON.stringify(Order);
   };
 
   const removeAllOrders = () => {

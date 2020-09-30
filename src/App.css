@@ -21,3 +21,14 @@
   -moz-columns: 2; /* Firefox */
   columns: 2;
 }
+
+
+.form-element label {
+  display: inline-block;
+  width: 150px;
+
+}
+
+.datepicker.dropdown-menu {
+  z-index: 9999 !important;
+}

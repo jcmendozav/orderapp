@@ -171,7 +171,7 @@ const AddTemplate = () => {
             }
             <div>
             </div>
-            <button onClick={saveTemplate} ena className="btn btn-success">
+            <button onClick={saveTemplate}  className="btn btn-success">
               Submit
           </button>
 

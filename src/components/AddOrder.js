@@ -44,7 +44,7 @@ const AddOrder = () => {
   const [submitted, setSubmitted] = useState(false);
   const [value, onDateChange] = useState(new Date());
   const [newFileName, setNewFileName] = useState('');
-  const [orderError, setOrderError] = useState(false);
+  const [orderError, setOrderError] = useState('');
   const [templates, setTemplates] = useState([]);
   const [templatesOption, setTemplatesOption] = useState([]);
   const [identitiesOption, setIdentitiesOption] = useState([]);
@@ -235,7 +235,6 @@ const AddOrder = () => {
   };
 
   return (
-    // <div className="submit-form">
     <div className="list row">
       {submitted ? (
         <div>
@@ -246,42 +245,45 @@ const AddOrder = () => {
           </button>
         </div>
       ) : (
-
-
-
           <div >
             <h4>Add Order</h4>
 
             <div className="article-container" >
+
+
               <div className="form-group">
-                <label htmlFor="orderName">Name</label>
-                <input
-                  type="text"
+                <label htmlFor="scheduleDate">Schedule Date</label>
+                <DateTimePicker
+                  id="scheduleDate"
                   className="form-control"
-                  id="orderName"
-                  required
-                  // readOnly
-                  value={Order.orderName}
-                  onChange={handleInputChange}
-                  name="orderName"
+                  onChange={handleDateInputChange}
+                  value={Order.scheduleDate}
+                  format="y-MM-ddTHH:mm:ss"
+                  name="scheduleDate"
+                  menuPosition="fixed"
                 />
               </div>
-              <div>
+
+              <div className="form-group">
                 <label htmlFor="template">Template</label>
                 <Select
                   // value={options.filter((option) => option.value === currentOrder.status)}
                   onChange={(event) => handleInputChange({ target: { name: 'template', value: event } })}
                   options={templatesOption}
                 // isDisabled={!canEditStatus}
+                menuPosition="fixed"
+
                 />
               </div>
-              <div>
+              <div className="form-group">
                 <label htmlFor="source">Source</label>
                 <Select
                   // value={options.filter((option) => option.value === currentOrder.status)}
                   onChange={(event) => handleInputChange({ target: { name: 'source', value: event } })}
                   options={identitiesOption}
                 // isDisabled={!canEditStatus}
+                  autosize={false}
+                  menuPosition="fixed"
                 />
               </div>
               <div className="form-group">
@@ -297,19 +299,20 @@ const AddOrder = () => {
                   name="sourceTitle"
                 />
               </div>
-              {/* </div>
-            <div> */}
               <div className="form-group">
-                <label htmlFor="scheduleDate">Schedule Date</label>
-                <DateTimePicker
-                  id="scheduleDate"
+                <label htmlFor="orderName">Order name</label>
+                <input
+                  type="text"
                   className="form-control"
-                  onChange={handleDateInputChange}
-                  value={Order.scheduleDate}
-                  format="y-MM-ddTHH:mm:ss"
-                  name="scheduleDate"
+                  id="orderName"
+                  required
+                  // readOnly
+                  value={Order.orderName}
+                  onChange={handleInputChange}
+                  name="orderName"
                 />
               </div>
+
               <div className="form-group">
                 <label htmlFor="quota">Quota</label>
                 <input
@@ -322,11 +325,8 @@ const AddOrder = () => {
                   name="quota"
                 />
               </div>
-
-
-
               <div className="form-group">
-                <label htmlFor="time">Interval</label>
+                <label>Interval</label>
                 <input
                   type="number"
                   className="form-control"
@@ -337,6 +337,7 @@ const AddOrder = () => {
                   name="time"
                 />
               </div>
+
               <div className="form-group">
                 <label htmlFor="time">File</label>
                 <input
@@ -377,17 +378,18 @@ const AddOrder = () => {
                 />
               </div>
 
-              <div>
-              </div>
+
 
             </div>
             <div>
-            {orderError &&
-              <label className='error'>{orderError}</label>
+              {orderError &&
+                <label className='error'>{orderError}</label>
 
-            }  
-            </div>          
-            <button onClick={saveOrder} ena className="btn btn-success">
+              }
+            </div>
+            <div>
+              </div>
+            <button onClick={saveOrder} className="btn btn-success">
               Submit
           </button>
           </div>

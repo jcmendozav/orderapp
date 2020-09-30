@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import TemplateDataService from "../services/TemplateService";
 import { Link } from "react-router-dom";
-import { Auth } from 'aws-amplify'
+// import { Auth } from 'aws-amplify'
 import DateHelper from "../util/date";
 
 const TemplateStatus = {
@@ -22,10 +22,10 @@ const TemplatesList = () => {
     retrieveTemplates();
   }, []);
 
-  const onChangeSearchTitle = e => {
-    const searchTitle = e.target.value;
-    setSearchTitle(searchTitle);
-  };
+  // const onChangeSearchTitle = e => {
+  //   const searchTitle = e.target.value;
+  //   setSearchTitle(searchTitle);
+  // };
 
   const onChangeSearchId = e => {
     const TemplateId = e.target.value;
