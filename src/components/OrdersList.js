@@ -73,6 +73,7 @@ const OrdersList = () => {
     OrderDataService.get(searchId)
       .then(response => {
         let result = response.data;
+        if(Object.entries(result).length === 0) return;
         if (!Array.isArray(result)) {
           result = [response.data];
         }
@@ -113,7 +114,7 @@ const OrdersList = () => {
         <h4>Orders List</h4>
 
         <ul className="list-group">
-          {Orders &&
+          {Orders && 
             Orders.map((Order, index) => (
               <li
                 className={
@@ -122,7 +123,6 @@ const OrdersList = () => {
                 onClick={() => setActiveOrder(Order, index)}
                 key={index}
               >
-                {/* {Order.id} */}
                 {getOrderLabel(Order)}
               </li>
             ))}

@@ -63,6 +63,11 @@ const TemplatesList = () => {
     TemplateDataService.get(searchId)
       .then(response => {
         let result = response.data;
+        if(Object.entries(result).length === 0) return;
+        if(result.result) {
+          console.log(JSON.stringify(result));
+          return;
+        }
         if (!Array.isArray(result)) {
           result = [response.data];
         }

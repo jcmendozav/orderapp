@@ -10,6 +10,7 @@ import OrdersList from "./components/OrdersList";
 import AddTemplate from "./components/AddTemplate";
 import Template from "./components/Template";
 import TemplatesList from "./components/TemplatesList";
+import Upload from "./components/Upload";
 
 import { withAuthenticator, AmplifySignOut } from '@aws-amplify/ui-react'
 import { Auth } from 'aws-amplify'
@@ -42,6 +43,12 @@ function App() {
               Add template
             </Link>
           </li>
+
+          <li className="nav-item">
+            <Link to={"/upload"} className="nav-link">
+              Add attachment
+            </Link>
+          </li>
           {/* <li className="nav-item">
             <AmplifySignOut />
           </li> */}
@@ -62,6 +69,7 @@ function App() {
           <Route path="/Orders/:id" component={Order} />
           <Route exact path={["/", "/Templates"]} component={TemplatesList} />
           <Route exact path="/addTemplate" component={AddTemplate} />
+          <Route exact path="/upload" component={Upload} />
           <Route path="/Templates/:id" component={Template} />
 
         </Switch>

@@ -48,6 +48,7 @@ const AddOrder = () => {
   const [templates, setTemplates] = useState([]);
   const [templatesOption, setTemplatesOption] = useState([]);
   const [identitiesOption, setIdentitiesOption] = useState([]);
+  const [fileToAttachList, setFileToAttachList] = useState([]);
 
 
   const retrieveTemplates = () => {
@@ -229,6 +230,22 @@ const AddOrder = () => {
 
   };
 
+  const handleAttachFile = async (event) => {
+    console.log("Inside handleAttachFile");
+
+    let id = event.target.id;
+    console.log(`id: ${id}`);
+
+    let file = event.target.files[0];
+    let fileName = file.name;
+    let fileType = file.type;
+    let userName = Auth.user.username;
+    var d = new Date();
+    let newName = userName + "_" + d.getTime() + "_" + fileName;
+    console.log(`newName: ${newName}`);
+
+  }
+
   const newOrder = () => {
     setOrder(initialOrderState);
     setSubmitted(false);
@@ -351,6 +368,20 @@ const AddOrder = () => {
                   name="file"
                 />
               </div>
+
+              <div className="form-group">
+                <label htmlFor="Attachments">Attachments</label>
+                <input
+                  type="file"
+                  className="form-control"
+                  id="Attachments"
+                  accept='text/csv'
+                  required
+                  // value={Order.file}
+                  onChange={(e) => handleAttachFile(e)}
+                  name="Attachments"
+                />
+              </div>
               <div className="form-group">
                 <label htmlFor="orderType">Order Type</label>
                 <input
@@ -380,6 +411,12 @@ const AddOrder = () => {
 
 
 
+            </div>
+            <div>
+              {Order.inputData &&
+                <label className='success'>File uploaded successfully</label>
+
+              }
             </div>
             <div>
               {orderError &&
