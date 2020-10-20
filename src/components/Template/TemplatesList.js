@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import TemplateDataService from "../services/TemplateService";
+import TemplateDataService from "../../services/TemplateService";
 import { Link } from "react-router-dom";
 // import { Auth } from 'aws-amplify'
-import DateHelper from "../util/date";
+import DateHelper from "../../util/date";
 
 const TemplateStatus = {
   0: "CREATED",

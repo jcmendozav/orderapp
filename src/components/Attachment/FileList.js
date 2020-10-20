@@ -1,5 +1,5 @@
 import React from 'react';
-// import './FileList';
+import './FileList';
 import File from './File';
 
 class FileList extends React.Component{

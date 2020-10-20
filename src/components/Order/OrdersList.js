@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import OrderDataService from "../services/OrderService";
+import OrderDataService from "../../services/OrderService";
 import { Link } from "react-router-dom";
 import { Auth } from 'aws-amplify'
-import DateHelper from "../util/date";
-import OrderUtil from "../util/Order";
+import DateHelper from "../../util/date";
+import OrderUtil from "../../util/Order";
 
 const orderStatus = {
   0: "CREATED",

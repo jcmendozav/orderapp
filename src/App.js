@@ -3,14 +3,14 @@ import { Switch, Route, Link } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 
-import AddOrder from "./components/AddOrder";
-import Order from "./components/Order";
-import OrdersList from "./components/OrdersList";
+import AddOrder from "./components/Order/AddOrder";
+import Order from "./components/Order/Order";
+import OrdersList from "./components/Order/OrdersList";
 
-import AddTemplate from "./components/AddTemplate";
-import Template from "./components/Template";
-import TemplatesList from "./components/TemplatesList";
-import Upload from "./components/Upload";
+import AddTemplate from "./components/Template/AddTemplate";
+import Template from "./components/Template/Template";
+import TemplatesList from "./components/Template/TemplatesList";
+import Upload from "./components/Attachment/Upload";
 
 import { withAuthenticator, AmplifySignOut } from '@aws-amplify/ui-react'
 import { Auth } from 'aws-amplify'

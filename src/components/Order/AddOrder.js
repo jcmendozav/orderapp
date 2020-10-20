@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from "react";
-import OrderDataService from "../services/OrderService";
+import OrderDataService from "../../services/OrderService";
 import Storage from '@aws-amplify/storage'
 import { Auth } from 'aws-amplify'
 import DateTimePicker from 'react-datetime-picker';
-import TemplateDataService from "../services/TemplateService";
-import IdentityService from "../services/IdentityService";
-import Select from 'react-select'
+import TemplateDataService from "../../services/TemplateService";
+import IdentityService from "../../services/IdentityService";
+import Select from 'react-select';
+// import {default as Select} from 'react-select'
+
+// import { default as Select } from "react-select";
+// import Select from "react-select/lib/Select";
+
+import Upload from "../Attachment/Upload";
 
 
 // import API, { graphqlOperation } from '@aws-amplify/api';
@@ -48,7 +54,8 @@ const AddOrder = () => {
   const [templates, setTemplates] = useState([]);
   const [templatesOption, setTemplatesOption] = useState([]);
   const [identitiesOption, setIdentitiesOption] = useState([]);
-  const [fileToAttachList, setFileToAttachList] = useState([]);
+  const [fileToAttachList, setFileToAttachList] = useState([{'dummy':'from Add Order'}]);
+  // const [fileToUploadList, setFileToUploadList] = useState([]);
 
 
   const retrieveTemplates = () => {
@@ -371,7 +378,8 @@ const AddOrder = () => {
 
               <div className="form-group">
                 <label htmlFor="Attachments">Attachments</label>
-                <input
+                <Upload  fileToAttachList={fileToAttachList}/>
+                {/* <input
                   type="file"
                   className="form-control"
                   id="Attachments"
@@ -380,7 +388,7 @@ const AddOrder = () => {
                   // value={Order.file}
                   onChange={(e) => handleAttachFile(e)}
                   name="Attachments"
-                />
+                /> */}
               </div>
               <div className="form-group">
                 <label htmlFor="orderType">Order Type</label>

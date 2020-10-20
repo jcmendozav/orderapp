@@ -1,5 +1,5 @@
 import React from 'react';
-// import './File.css'; 
+import './File.css'; 
 
 class File extends React.Component{
 
@@ -28,14 +28,16 @@ class File extends React.Component{
         <div className="File-information">
           <h3>
               {/* <!-- File name will go here --> */}
-              {this.props.file.name}
+              {this.props.file.name} | {this.props.file.size}
               </h3>
           <p>
               {/* <!-- File artist will go here--> | <!-- File album will go here --> */}
-              {this.props.file.id} | {this.props.file.size}
+              {/* {this.props.file.name} | {this.props.file.size} */}
+
               </p>
         </div>
         {this.renderAction()}
+
       </div>);
     }
 }

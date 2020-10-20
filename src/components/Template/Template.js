@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import TemplateDataService from "../services/TemplateService";
-import MailService from "../services/MailService";
+import TemplateDataService from "../../services/TemplateService";
+import MailService from "../../services/MailService";
 import Select from 'react-select'
-import DateHelper from "../util/date";
+import DateHelper from "../../util/date";
 
 
 
