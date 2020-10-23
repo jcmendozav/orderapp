@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import OrderDataService from "../../services/OrderService";
 import Storage from '@aws-amplify/storage'
-import { Auth } from 'aws-amplify'
+import { Auth, sectionBody } from 'aws-amplify'
 import DateTimePicker from 'react-datetime-picker';
 import TemplateDataService from "../../services/TemplateService";
 import IdentityService from "../../services/IdentityService";
@@ -24,7 +24,8 @@ import Upload from "../Attachment/Upload";
 //   }, // OPTIONAL
 // };
 
-Storage.configure({
+
+const s3Configuration = {
   customPrefix: {
     public: 'input/'
   },
@@ -33,7 +34,15 @@ Storage.configure({
     bucket: 'pilot-mowa-mail-data-order',
     region: 'us-east-1'
   }
-})
+};
+Storage.configure(s3Configuration);
+
+const maxAttachmentSize = 10 * 1024;
+const maxAttachmentNumber = 10;
+
+const maxTemplateDataFileSize = 10 * 1024 * 1024;
+const maxTemplateDataFileNumber = 1;
+// TODO maxTemplateDataFile
 
 const AddOrder = () => {
   const initialOrderState = {
@@ -54,8 +63,14 @@ const AddOrder = () => {
   const [templates, setTemplates] = useState([]);
   const [templatesOption, setTemplatesOption] = useState([]);
   const [identitiesOption, setIdentitiesOption] = useState([]);
-  const [fileToAttachList, setFileToAttachList] = useState([{'dummy':'from Add Order'}]);
-  // const [fileToUploadList, setFileToUploadList] = useState([]);
+
+  const [fileToAttachList, setFileToAttachList] = useState([]);
+  // const [attachmentsInfo, setAttachmentsInfo] = useState([]);
+  let attachmentsInfo;
+  const [templateDataFile, setTemplateDataFile] = useState();
+  // const [templateDataFileInfo, setTemplateDataFileInfo] = useState({});
+  let templateDataFileInfo;
+  // const [fileToUploadList, setFileToAttachList] = useState([]);
 
 
   const retrieveTemplates = () => {
@@ -103,38 +118,68 @@ const AddOrder = () => {
     retrieveIdentities();
   }, []);
 
-  const handleInputFile = async (event) => {
-    // console.log("Inside handleInputFile");
-    // console.log(event.target.files);
-    // console.log(Auth.user);
+  // const _handleInputTemplateDataFile = async (event) => {
+  //   // console.log("Inside handleInputTemplateDataFile");
+  //   // console.log(event.target.files);
+  //   // console.log(Auth.user);
+
+  //   let file = event.target.files[0];
+  //   setTemplateDataFile(file);
+  //   let fileName = file.name;
+  //   let fileType = file.type;
+  //   let userName = Auth.user.username;
+  //   var d = new Date();
+  //   let newName = userName + "_" + d.getTime() + "_" + fileName;
+  //   // let newName = fileName;
+  //   console.log("New file name: " + newName);
+  //   // const { key } = await Storage.put(newName, file, {
+  //   Storage.put(newName, file, {
+  //     contentType: fileType
+  //   })
+  //     .then(result => {
+  //       console.log(result);
+  //       setOrder({ ...Order, inputData: newName });
+  //       console.log(Order);
+  //       setNewFileName(newName);
+
+  //     }
+  //     )
+  //     .catch(err => console.log(err));
+
+  //   // Storage.get(newName)
+  //   // .then(result => console.log(result))
+  //   // .catch(err => console.log(err));
+
+
+  //   // console.log('S3 Object key', key)
+  // }
+
+
+
+  const handleInputTemplateDataFile = async (event) => {
+    console.log("Inside handleInputTemplateDataFile");
+    event.preventDefault();
+    // let id = event.target.id;
+    // console.log(`id: ${id}`);
     let file = event.target.files[0];
-    let fileName = file.name;
-    let fileType = file.type;
-    let userName = Auth.user.username;
-    var d = new Date();
-    let newName = userName + "_" + d.getTime() + "_" + fileName;
-    // let newName = fileName;
-    console.log("New file name: " + newName);
-    // const { key } = await Storage.put(newName, file, {
-    Storage.put(newName, file, {
-      contentType: fileType
-    })
-      .then(result => {
-        console.log(result);
-        setOrder({ ...Order, inputData: newName });
-        console.log(Order);
-        setNewFileName(newName);
+    if (file.size >= maxTemplateDataFileSize) {
+      // setValidSize(false);
+      alert(`Files size not allowed: ${file.size} bytes > ${maxTemplateDataFileSize} bytes`);
+      // setAlertSizeMsg(`Files size not allowed: ${potentialSize} bytes > ${maxAttachmentSize} bytes`);
+      return;
+    } 
+    setTemplateDataFile(file);
 
-      }
-      )
-      .catch(err => console.log(err));
-
-    // Storage.get(newName)
-    // .then(result => console.log(result))
-    // .catch(err => console.log(err));
-
-
-    // console.log('S3 Object key', key)
+    
+    // console.log(`Adding: ${JSON.stringify(newArr)}`);
+    // setTemplateDataFileList([...templateDataFileList, ...newArr]);
+    
+  }
+  const uploadTemplateDataFile = async () => {
+    const storageResponse = await uploadToStorage(templateDataFile);
+    console.log(`storageResponse: ${storageResponse}`);
+    // setTemplateDataFileInfo(storageResponse);
+    templateDataFileInfo = storageResponse;
   }
 
   const handleInputChange = event => {
@@ -157,8 +202,11 @@ const AddOrder = () => {
   };
 
   const orderFormError = (data) => {
-    if (!data.inputData) {
-      return "Invalid file name, try again";
+    if (!attachmentsInfo) {
+      return "Invalid attachmentsInfo, try again";
+    }
+    if (!templateDataFileInfo) {
+      return "Invalid templateDataFileInfo, try again";
     }
     if (!data.template) {
       return "Invalid template, try again";
@@ -173,29 +221,45 @@ const AddOrder = () => {
     return false;
   };
 
-  const saveOrder = () => {
+  const saveOrder = async () => {
+
+    await uploadAttachments();
+    await uploadTemplateDataFile();
 
     const error = orderFormError(Order);
     if (error) {
       setOrderError(error);
       return;
     }
+
+    console.log(`templateDataFileInfo: ${JSON.stringify(templateDataFileInfo)}`);
+    console.log(`attachmentsInfo: ${JSON.stringify(attachmentsInfo)}`);
+
+
+
+
     var data = {
       orderType: Order.orderType,
       userId: Auth.user.username,
       name: Order.orderName,
       details: {
         scheduleDate: Order.scheduleDate.toISOString(),
-        inputData: Order.inputData,
+        // inputData: Order.inputData,
+        inputData: templateDataFileInfo.responseKey,
         quota: parseInt(Order.quota),
         time: parseInt(Order.time),
         configuration: (Order.configuration),
         template: (Order.template.value),
         source: (Order.source.value),
-        sourceTitle: (Order.sourceTitle)
+        sourceTitle: (Order.sourceTitle),
+        templateDataFileInfo,
+        attachmentsInfo
       }
     };
 
+    console.log(`data request: ${JSON.stringify(data)}`);
+
+    return;
     // if(!Order.inputData){
 
     // }
@@ -237,26 +301,124 @@ const AddOrder = () => {
 
   };
 
-  const handleAttachFile = async (event) => {
-    console.log("Inside handleAttachFile");
-
-    let id = event.target.id;
-    console.log(`id: ${id}`);
-
-    let file = event.target.files[0];
-    let fileName = file.name;
-    let fileType = file.type;
-    let userName = Auth.user.username;
-    var d = new Date();
-    let newName = userName + "_" + d.getTime() + "_" + fileName;
-    console.log(`newName: ${newName}`);
-
-  }
 
   const newOrder = () => {
     setOrder(initialOrderState);
     setSubmitted(false);
   };
+
+  //
+  // Attachment section begin
+  //
+
+  const uploadToStorage = async file => {
+    console.log(`uploadToStorage: ${file.name}`);
+
+    try {
+      const response = await fetch(file.uri);
+  
+      const blob = await response.blob();
+      let fileName = file.name;
+      let fileType = file.type;
+      let userName = Auth.user.username;
+      var d = new Date();
+      let newFileName = userName + "_" + d.getTime() + "_" + fileName;
+      const storageResponse = await Storage.put(newFileName, blob, {
+        contentType: fileType,
+      });
+      console.log(`uploadToStorage: ${newFileName} -> ${JSON.stringify(storageResponse)}`);
+      return {
+        "name": fileName,
+        "key": `${s3Configuration.customPrefix.public}${storageResponse.key}`,
+        "responseKey":storageResponse.key,
+        "bucket": s3Configuration.AWSS3.bucket
+      }
+
+    } catch (err) {
+      console.log(err);
+      throw Error(err);
+    }
+  }
+
+  const uploadAttachments = async (event) => {
+    // event.preventDefault();
+    // let newArr = fileInput.current.files;
+
+    attachmentsInfo = await Promise.all(fileToAttachList.map(file => uploadToStorage(file)));
+    console.log(`attachmentsInfo: ${attachmentsInfo}`);
+    // setAttachmentsInfo(promiseResponse);
+    // attachmentsInfo 
+
+
+
+  };
+
+
+  const handleInputAttachment = async (event) => {
+    console.log("Inside handleInputAttachment");
+    event.preventDefault();
+    const currentSize = getTotalSize();
+    let id = event.target.id;
+    console.log(`id: ${id}`);
+    let newArr = event.target.files;
+    let newSize = 0;
+
+    for (let i = 0; i < newArr.length; i++) {
+      let e = (newArr[i]);
+      let id = `${e.name}_${e.size}_${e.type}_${e.lastModified}`;
+      e.id = id;
+      newSize += e.size;
+    }
+
+    const potentialSize = newSize + currentSize;
+
+    if (potentialSize >= maxAttachmentSize) {
+      // setValidSize(false);
+      alert(`Files size not allowed: ${potentialSize} bytes > ${maxAttachmentSize} bytes`);
+      // setAlertSizeMsg(`Files size not allowed: ${potentialSize} bytes > ${maxAttachmentSize} bytes`);
+      return;
+    } else {
+      // setValidSize(true);
+      // setAlertSizeMsg(`Total size: ${potentialSize}`);
+    }
+
+    // console.log(`Adding: ${JSON.stringify(newArr)}`);
+    setFileToAttachList([...fileToAttachList, ...newArr]);
+
+    // console.log(`fileToAttachList: ${JSON.stringify(fileToAttachList)}`);
+    fileToAttachList.forEach((file, index) => console.log(`index ${index}: ${file.name}`));
+
+
+
+  }
+  
+
+
+  // const addFile = (file) => {
+  //     const fileListLocal = fileToAttachList.slice();
+  //     const result = fileListLocal.findIndex(t => t.id === file.id);
+  //     if (result < 0) {
+  //         fileListLocal.push(file);
+  //         setFileToAttachList(fileListLocal);
+  //         // this.setState({
+  //         //     fileList: fileList
+  //         // })
+  //     }
+  //     // if(result && result.length>0)
+  // }
+
+  const getTotalSize = () => {
+
+    return (fileToAttachList.map(e => e.size).reduce((acc, cur) => { acc += cur; return acc; }, 0));
+  }
+  const removeAttachmentFile = (file) => {
+    setFileToAttachList(fileToAttachList.filter(t => t.id != file.id));
+  }
+
+
+  //
+  // Attachment section end
+  //
 
   return (
     <div className="list row">
@@ -294,8 +456,8 @@ const AddOrder = () => {
                   // value={options.filter((option) => option.value === currentOrder.status)}
                   onChange={(event) => handleInputChange({ target: { name: 'template', value: event } })}
                   options={templatesOption}
-                // isDisabled={!canEditStatus}
-                menuPosition="fixed"
+                  // isDisabled={!canEditStatus}
+                  menuPosition="fixed"
 
                 />
               </div>
@@ -305,7 +467,7 @@ const AddOrder = () => {
                   // value={options.filter((option) => option.value === currentOrder.status)}
                   onChange={(event) => handleInputChange({ target: { name: 'source', value: event } })}
                   options={identitiesOption}
-                // isDisabled={!canEditStatus}
+                  // isDisabled={!canEditStatus}
                   autosize={false}
                   menuPosition="fixed"
                 />
@@ -371,24 +533,22 @@ const AddOrder = () => {
                   accept='text/csv'
                   required
                   value={Order.file}
-                  onChange={(e) => handleInputFile(e)}
+                  onChange={(e) => handleInputTemplateDataFile(e)}
                   name="file"
                 />
               </div>
 
               <div className="form-group">
                 <label htmlFor="Attachments">Attachments</label>
-                <Upload  fileToAttachList={fileToAttachList}/>
-                {/* <input
-                  type="file"
-                  className="form-control"
-                  id="Attachments"
-                  accept='text/csv'
-                  required
-                  // value={Order.file}
-                  onChange={(e) => handleAttachFile(e)}
-                  name="Attachments"
-                /> */}
+                <Upload
+                  fileToUploadList={fileToAttachList}
+                  uploadFiles={uploadAttachments}
+                  getTotalSize={getTotalSize}
+                  removeFile={removeAttachmentFile}
+                  handleInputFile={handleInputAttachment}
+                  multipleFiles={true}
+                  acceptExtentions={".csv, .pdf, .txt"}
+                />
               </div>
               <div className="form-group">
                 <label htmlFor="orderType">Order Type</label>
@@ -433,7 +593,7 @@ const AddOrder = () => {
               }
             </div>
             <div>
-              </div>
+            </div>
             <button onClick={saveOrder} className="btn btn-success">
               Submit
           </button>

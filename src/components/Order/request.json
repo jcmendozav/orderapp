@@ -1,0 +1,35 @@
+{
+    "orderType": "pushMailScheduledWithQuota",
+    "userId": "jcmendozav",
+    "name": "AWS order",
+    "details": {
+        "scheduleDate": "2020-10-23T03:23:43.737Z",
+        "inputData": "jcmendozav_1603423468278_AWSDemoTempSimple.csv",
+        "quota": 10,
+        "time": 60,
+        "configuration": "PilotConfigurationSet",
+        "template": "AWS_TEMPLATE_DEMO",
+        "source": "lguzman@mowa.com.pe",
+        "sourceTitle": "AWS source",
+        "templateDataFileInfo": {
+            "name": "AWSDemoTempSimple.csv",
+            "key": "input/jcmendozav_1603423468278_AWSDemoTempSimple.csv",
+            "responseKey": "jcmendozav_1603423468278_AWSDemoTempSimple.csv",
+            "bucket": "pilot-mowa-mail-data-order"
+        },
+        "attachmentsInfo": [
+            {
+                "name": "AWSDemoTempNew.csv",
+                "key": "input/jcmendozav_1603423466605_AWSDemoTempNew.csv",
+                "responseKey": "jcmendozav_1603423466605_AWSDemoTempNew.csv",
+                "bucket": "pilot-mowa-mail-data-order"
+            },
+            {
+                "name": "AWSDemoTemp.csv",
+                "key": "input/jcmendozav_1603423466631_AWSDemoTemp.csv",
+                "responseKey": "jcmendozav_1603423466631_AWSDemoTemp.csv",
+                "bucket": "pilot-mowa-mail-data-order"
+            }
+        ]
+    }
+}
