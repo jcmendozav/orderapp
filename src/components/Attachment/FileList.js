@@ -8,7 +8,13 @@ class FileList extends React.Component{
         return (<div className="FileList">
         {/* <!-- You will add a map method that renders a set of file components  --> */}
         {this.props.files && this.props.files.map((file,index)=>{
-            return (<File file={file} key={index} onAdd={this.props.onAdd} onRemove={this.props.onRemove} isRemoval={this.props.isRemoval} />);
+            return (<File file={file} 
+                key={index} 
+                onAdd={this.props.onAdd} 
+                onRemove={this.props.onRemove} 
+                isRemoval={this.props.isRemoval}
+                formatHumanReadable={this.props.formatHumanReadable}
+                 />);
         })}
     </div>);
     }

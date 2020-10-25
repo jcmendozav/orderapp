@@ -37,28 +37,28 @@ const s3Configuration = {
 };
 Storage.configure(s3Configuration);
 
-const maxAttachmentSize = 10 * 1024;
+const maxAttachmentSize = 10 * 1024 * 1024;
 const maxAttachmentNumber = 10;
 
 const maxTemplateDataFileSize = 10 * 1024 * 1024;
 const maxTemplateDataFileNumber = 1;
-// TODO maxTemplateDataFile
 
 const AddOrder = () => {
   const initialOrderState = {
     // id: null,
     // title: "",
-    orderType: "pushMailScheduledWithQuota",
+    orderType: "pushMailAttachment",
     configuration: "PilotConfigurationSet",
     quota: 10,
     time: 60,
     scheduleDate: new Date(),
-    inputData: ""
+    inputData: "",
+    replyTo: "",
+    sourceTitle: ""
   };
   const [Order, setOrder] = useState(initialOrderState);
   const [submitted, setSubmitted] = useState(false);
   const [value, onDateChange] = useState(new Date());
-  const [newFileName, setNewFileName] = useState('');
   const [orderError, setOrderError] = useState('');
   const [templates, setTemplates] = useState([]);
   const [templatesOption, setTemplatesOption] = useState([]);
@@ -72,6 +72,9 @@ const AddOrder = () => {
   let templateDataFileInfo;
   // const [fileToUploadList, setFileToAttachList] = useState([]);
 
+  const [validReplyToAddress, setValidReplyToAddress] = useState(true);
+
+  const [progressLog, setProgressLog] = useState([]);
 
   const retrieveTemplates = () => {
     TemplateDataService.getAll()
@@ -155,7 +158,25 @@ const AddOrder = () => {
   // }
 
 
+  const readFileLines = file => {
+    if (!file) return;
+    const reader = new FileReader();
 
+    reader.onload = (event) => {
+      const file = event.target.result;
+      const allLines = file.split(/\r\n|\n/);
+      // Reading line by line
+      allLines.forEach((line) => {
+        console.log(line);
+      });
+    };
+
+    reader.onerror = (event) => {
+      alert(event.target.error.name);
+    };
+
+    reader.readAsText(file);
+  }
   const handleInputTemplateDataFile = async (event) => {
     console.log("Inside handleInputTemplateDataFile");
     event.preventDefault();
@@ -164,22 +185,27 @@ const AddOrder = () => {
     let file = event.target.files[0];
     if (file.size >= maxTemplateDataFileSize) {
       // setValidSize(false);
-      alert(`Files size not allowed: ${file.size} bytes > ${maxTemplateDataFileSize} bytes`);
+      alert(`Files size not allowed: ${formatHumanReadable(file.size)} bytes > ${formatHumanReadable(maxTemplateDataFileSize)} `);
       // setAlertSizeMsg(`Files size not allowed: ${potentialSize} bytes > ${maxAttachmentSize} bytes`);
       return;
-    } 
+    }
+    // readFileLines(file);
     setTemplateDataFile(file);
 
-    
+
     // console.log(`Adding: ${JSON.stringify(newArr)}`);
     // setTemplateDataFileList([...templateDataFileList, ...newArr]);
-    
+
   }
   const uploadTemplateDataFile = async () => {
+    readFileLines(templateDataFile);
     const storageResponse = await uploadToStorage(templateDataFile);
-    console.log(`storageResponse: ${storageResponse}`);
     // setTemplateDataFileInfo(storageResponse);
     templateDataFileInfo = storageResponse;
+    console.log(`templateDataFileInfo: ${templateDataFileInfo}`);
+    // readFileLines(templateDataFileInfo);
+    pushProgressLog('Template uploading success');
+
   }
 
   const handleInputChange = event => {
@@ -201,11 +227,163 @@ const AddOrder = () => {
 
   };
 
+
+
+
+
+
+  //
+  // Attachment section begin
+  //
+
+  const uploadToStorage = async file => {
+    if (!file) return;
+    console.log(`uploadToStorage: ${file.name}`);
+
+    try {
+      // const response = await fetch(file.uri);
+
+      // const blob = await response.blob();
+      let fileName = file.name;
+      let fileType = file.type;
+      let userName = Auth.user.username;
+      var d = new Date();
+      let newFileName = userName + "_" + d.getTime() + "_" + fileName;
+      const storageResponse = await Storage.put(newFileName, file, {
+        contentType: fileType,
+      });
+      console.log(`uploadToStorage: ${newFileName} -> ${JSON.stringify(storageResponse)}`);
+      readFileLines(file);
+      return {
+        "name": fileName,
+        "key": `${s3Configuration.customPrefix.public}${storageResponse.key}`,
+        "responseKey": storageResponse.key,
+        "bucket": s3Configuration.AWSS3.bucket
+      }
+
+    } catch (err) {
+      console.log(err);
+      throw Error(err);
+    }
+  }
+
+  const uploadAttachments = async (event) => {
+    if(fileToAttachList && fileToAttachList.length==0) return;
+    attachmentsInfo = await Promise.all(fileToAttachList.map(file => uploadToStorage(file)));
+    console.log(`attachmentsInfo: ${attachmentsInfo}`);
+    pushProgressLog('Attachments uploading success');
+
+  };
+
+
+  const handleInputAttachment = async (event) => {
+    console.log("Inside handleInputAttachment");
+    event.preventDefault();
+    const currentSize = getAttachmentTotalSize();
+    let id = event.target.id;
+    console.log(`id: ${id}`);
+    let newArr = event.target.files;
+    let newSize = 0;
+
+    for (let i = 0; i < newArr.length; i++) {
+      let e = (newArr[i]);
+      let id = `${e.name}_${e.size}_${e.type}_${e.lastModified}`;
+      e.id = id;
+      newSize += e.size;
+    }
+
+    const potentialSize = newSize + currentSize;
+
+    if (potentialSize >= maxAttachmentSize) {
+      // setValidSize(false);
+      alert(`Files size not allowed: ${formatHumanReadable(potentialSize)}  > ${formatHumanReadable(maxAttachmentSize)} `);
+      // setAlertSizeMsg(`Files size not allowed: ${potentialSize} bytes > ${maxAttachmentSize} bytes`);
+      return;
+    } else {
+      // setValidSize(true);
+      // setAlertSizeMsg(`Total size: ${potentialSize}`);
+    }
+
+    // console.log(`Adding: ${JSON.stringify(newArr)}`);
+    setFileToAttachList([...fileToAttachList, ...newArr]);
+
+    // console.log(`fileToAttachList: ${JSON.stringify(fileToAttachList)}`);
+    // fileToAttachList.forEach((file, index) => console.log(`index ${index}: ${file.name}`));
+
+
+
+  }
+
+
+
+  // const addFile = (file) => {
+  //     const fileListLocal = fileToAttachList.slice();
+  //     const result = fileListLocal.findIndex(t => t.id === file.id);
+  //     if (result < 0) {
+  //         fileListLocal.push(file);
+  //         setFileToAttachList(fileListLocal);
+  //         // this.setState({
+  //         //     fileList: fileList
+  //         // })
+  //     }
+  //     // if(result && result.length>0)
+  // }
+
+  const getAttachmentTotalSize = () => {
+
+    return (fileToAttachList.map(e => e.size).reduce((acc, cur) => { acc += cur; return acc; }, 0));
+  }
+
+  const getAttachmentNumber = () => {
+
+    return fileToAttachList.length;
+  }
+
+  const formatHumanReadable = (bytes) => {
+    const sufixes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return !bytes && '0 Bytes' || (bytes / Math.pow(1024, i)).toFixed(2) + " " + sufixes[i];
+
+  }
+  const removeAttachmentFile = (file) => {
+    setFileToAttachList(fileToAttachList.filter(t => t.id != file.id));
+  }
+
+
+  //
+  // Attachment section end
+  //
+
+
+
+  const validateEmail = email => {
+    let re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(email);
+  }
+
+  const validateReplyTo = email => {
+    return email ? validateEmail(email) : true;
+  }
+  const getProgressLog = () => {
+    return progressLog ? progressLog.reduce((acc, cur) => {
+      acc += `${cur}` + '\n';
+      return acc;
+    }, "") : '';
+  }
+
+  const pushProgressLog = (message) => {
+    setProgressLog([...progressLog, message]);
+
+  }
   const orderFormError = (data) => {
-    if (!attachmentsInfo) {
+    if (!validReplyToAddress) {
+      return "Invalid reply to address, try again";
+    }
+
+    if (!fileToAttachList) {
       return "Invalid attachmentsInfo, try again";
     }
-    if (!templateDataFileInfo) {
+    if (!templateDataFile) {
       return "Invalid templateDataFileInfo, try again";
     }
     if (!data.template) {
@@ -223,17 +401,23 @@ const AddOrder = () => {
 
   const saveOrder = async () => {
 
-    await uploadAttachments();
-    await uploadTemplateDataFile();
+
 
     const error = orderFormError(Order);
     if (error) {
-      setOrderError(error);
+      alert(error);
+      // setOrderError(error);
       return;
     }
+    pushProgressLog('Order form valid');
 
-    console.log(`templateDataFileInfo: ${JSON.stringify(templateDataFileInfo)}`);
-    console.log(`attachmentsInfo: ${JSON.stringify(attachmentsInfo)}`);
+    await uploadAttachments();
+    await uploadTemplateDataFile();
+    // pushProgressLog('Template data uploading success');
+
+
+    // console.log(`templateDataFileInfo: ${JSON.stringify(templateDataFileInfo)}`);
+    // console.log(`attachmentsInfo: ${JSON.stringify(attachmentsInfo)}`);
 
 
 
@@ -252,18 +436,19 @@ const AddOrder = () => {
         template: (Order.template.value),
         source: (Order.source.value),
         sourceTitle: (Order.sourceTitle),
+        replyTo: Order.replyTo,
         templateDataFileInfo,
         attachmentsInfo
       }
     };
 
-    console.log(`data request: ${JSON.stringify(data)}`);
+    // console.log(`data request: ${JSON.stringify(data)}`);
 
-    return;
+    // return;
     // if(!Order.inputData){
 
     // }
-    OrderDataService.create(data)
+    await OrderDataService.create(data)
       .then(response => {
         setOrder({
           id: response.data.orderId
@@ -300,126 +485,14 @@ const AddOrder = () => {
     // });
 
   };
-
-
   const newOrder = () => {
     setOrder(initialOrderState);
     setSubmitted(false);
+    setProgressLog([]);
+    setFileToAttachList([]);
+    setTemplateDataFile([]);
+    setValidReplyToAddress(true);
   };
-
-  //
-  // Attachment section begin
-  //
-
-  const uploadToStorage = async file => {
-    console.log(`uploadToStorage: ${file.name}`);
-
-    try {
-      const response = await fetch(file.uri);
-  
-      const blob = await response.blob();
-      let fileName = file.name;
-      let fileType = file.type;
-      let userName = Auth.user.username;
-      var d = new Date();
-      let newFileName = userName + "_" + d.getTime() + "_" + fileName;
-      const storageResponse = await Storage.put(newFileName, blob, {
-        contentType: fileType,
-      });
-      console.log(`uploadToStorage: ${newFileName} -> ${JSON.stringify(storageResponse)}`);
-      return {
-        "name": fileName,
-        "key": `${s3Configuration.customPrefix.public}${storageResponse.key}`,
-        "responseKey":storageResponse.key,
-        "bucket": s3Configuration.AWSS3.bucket
-      }
-
-    } catch (err) {
-      console.log(err);
-      throw Error(err);
-    }
-  }
-
-  const uploadAttachments = async (event) => {
-    // event.preventDefault();
-    // let newArr = fileInput.current.files;
-
-    attachmentsInfo = await Promise.all(fileToAttachList.map(file => uploadToStorage(file)));
-    console.log(`attachmentsInfo: ${attachmentsInfo}`);
-    // setAttachmentsInfo(promiseResponse);
-    // attachmentsInfo 
-
-
-
-  };
-
-
-  const handleInputAttachment = async (event) => {
-    console.log("Inside handleInputAttachment");
-    event.preventDefault();
-    const currentSize = getTotalSize();
-    let id = event.target.id;
-    console.log(`id: ${id}`);
-    let newArr = event.target.files;
-    let newSize = 0;
-
-    for (let i = 0; i < newArr.length; i++) {
-      let e = (newArr[i]);
-      let id = `${e.name}_${e.size}_${e.type}_${e.lastModified}`;
-      e.id = id;
-      newSize += e.size;
-    }
-
-    const potentialSize = newSize + currentSize;
-
-    if (potentialSize >= maxAttachmentSize) {
-      // setValidSize(false);
-      alert(`Files size not allowed: ${potentialSize} bytes > ${maxAttachmentSize} bytes`);
-      // setAlertSizeMsg(`Files size not allowed: ${potentialSize} bytes > ${maxAttachmentSize} bytes`);
-      return;
-    } else {
-      // setValidSize(true);
-      // setAlertSizeMsg(`Total size: ${potentialSize}`);
-    }
-
-    // console.log(`Adding: ${JSON.stringify(newArr)}`);
-    setFileToAttachList([...fileToAttachList, ...newArr]);
-
-    // console.log(`fileToAttachList: ${JSON.stringify(fileToAttachList)}`);
-    fileToAttachList.forEach((file, index) => console.log(`index ${index}: ${file.name}`));
-
-
-
-  }
-  
-
-
-  // const addFile = (file) => {
-  //     const fileListLocal = fileToAttachList.slice();
-  //     const result = fileListLocal.findIndex(t => t.id === file.id);
-  //     if (result < 0) {
-  //         fileListLocal.push(file);
-  //         setFileToAttachList(fileListLocal);
-  //         // this.setState({
-  //         //     fileList: fileList
-  //         // })
-  //     }
-  //     // if(result && result.length>0)
-  // }
-
-  const getTotalSize = () => {
-
-    return (fileToAttachList.map(e => e.size).reduce((acc, cur) => { acc += cur; return acc; }, 0));
-  }
-  const removeAttachmentFile = (file) => {
-    setFileToAttachList(fileToAttachList.filter(t => t.id != file.id));
-  }
-
-
-  //
-  // Attachment section end
-  //
-
   return (
     <div className="list row">
       {submitted ? (
@@ -470,6 +543,20 @@ const AddOrder = () => {
                   // isDisabled={!canEditStatus}
                   autosize={false}
                   menuPosition="fixed"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="replyTo">Reply to</label>
+                <input
+                  type="email"
+                  className="form-control"
+                  id="replyTo"
+                  required
+                  // readOnly
+                  value={Order.replyTo}
+                  onChange={handleInputChange}
+                  onBlur={() => { setValidReplyToAddress(validateReplyTo(Order.replyTo)) }}
+                  name="replyTo"
                 />
               </div>
               <div className="form-group">
@@ -525,7 +612,7 @@ const AddOrder = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="time">File</label>
+                <label htmlFor="time">Template data file</label>
                 <input
                   type="file"
                   className="form-control"
@@ -539,14 +626,16 @@ const AddOrder = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="Attachments">Attachments</label>
+                <label htmlFor="Attachments">Attachments: {getAttachmentNumber()}, size: {formatHumanReadable(getAttachmentTotalSize())}</label>
                 <Upload
                   fileToUploadList={fileToAttachList}
                   uploadFiles={uploadAttachments}
-                  getTotalSize={getTotalSize}
+                  getTotalSize={getAttachmentTotalSize}
                   removeFile={removeAttachmentFile}
                   handleInputFile={handleInputAttachment}
+                  formatHumanReadable={formatHumanReadable}
                   multipleFiles={true}
+                  openModalLabel={"Edit attachments"}
                   acceptExtentions={".csv, .pdf, .txt"}
                 />
               </div>
@@ -579,6 +668,12 @@ const AddOrder = () => {
 
 
 
+            </div>
+            <div>
+              {progressLog.length>0 &&
+                <label className='inProgress'>{getProgressLog()}</label>
+
+              }
             </div>
             <div>
               {Order.inputData &&

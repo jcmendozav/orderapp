@@ -16,6 +16,7 @@
 
 .error { border: 1px solid red; }
 .success { border: 1px solid forestgreen; }
+.inProgress { border: 1px solid orange; }
 
 .article-container {
   -webkit-columns: 2; /* Chrome, Safari, Opera */

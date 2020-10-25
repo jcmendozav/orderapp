@@ -1,5 +1,7 @@
 import React from 'react';
 import './File.css'; 
+import DateHelper from "../../util/date";
+
 
 class File extends React.Component{
 
@@ -26,14 +28,15 @@ class File extends React.Component{
     render(){
         return (<div className="File">
         <div className="File-information">
-          <h3>
-              {/* <!-- File name will go here --> */}
-              {this.props.file.name} | {this.props.file.size}
+            
+              {/* Name: {this.props.file.name}, size: {this.props.formatHumanReadable(this.props.file.size)} */}
+              <h3>
+              {/* <!-- track name will go here --> */}
+              {this.props.file.name}
               </h3>
           <p>
-              {/* <!-- File artist will go here--> | <!-- File album will go here --> */}
-              {/* {this.props.file.name} | {this.props.file.size} */}
-
+              {/* <!-- track artist will go here--> | <!-- track album will go here --> */}
+              Last modified data: {DateHelper.convertStrDateToLocalDateString(new Date(this.props.file.lastModified))} | Size: {this.props.formatHumanReadable(this.props.file.size)}
               </p>
         </div>
         {this.renderAction()}

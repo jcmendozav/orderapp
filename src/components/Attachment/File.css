@@ -33,5 +33,7 @@
   .File-information p {
     font-size: .83rem;
     font-weight: 300;
-    color: rgba(256, 256, 256, 0.8);
+    /* color: rgba(256, 256, 256, 0.8); */
+    color: #000;
+
   }

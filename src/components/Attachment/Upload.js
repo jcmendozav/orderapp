@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Storage from '@aws-amplify/storage';
-import { Auth } from 'aws-amplify';
+// import { Auth } from 'aws-amplify';
 import FileList from './FileList';
 import Modal from 'react-modal';
 // import Select from "react-select";
@@ -28,17 +28,17 @@ Storage.configure({
         region: 'us-east-1'
     }
 })
-const maxSize = 10 * 1024;
+// const maxSize = 10 * 1024;
 // const minSize = 0;
 
 
-const Upload = ({fileToUploadList,uploadFiles,getTotalSize,removeFile,handleInputFile,multipleFiles,acceptExtentions}) => {
+const Upload = ({fileToUploadList,uploadFiles,getTotalSize,removeFile,handleInputFile,multipleFiles,acceptExtentions,formatHumanReadable,openModalLabel}) => {
 
     // const fileInput = React.useRef();
     // const {fileToUploadList} = props;
     console.log(`fileToUploadList: ${JSON.stringify(fileToUploadList)}`);
 
-    let subtitle;
+    // let subtitle;
     const [modalIsOpen, setIsOpen] = React.useState(false);
     const openModal = () => {
         setIsOpen(true);
@@ -54,22 +54,22 @@ const Upload = ({fileToUploadList,uploadFiles,getTotalSize,removeFile,handleInpu
     }
 
     // const [fileToUploadList, setFileToUploadList] = useState([]);
-    const [validSize, setValidSize] = useState(false);
-    const [alertSizeMsg, setAlertSizeMsg] = useState('');
-    const [filesTotalSize, setFilesTotalSize] = useState(0);
+    // const [validSize, setValidSize] = useState(false);
+    // const [alertSizeMsg, setAlertSizeMsg] = useState('');
+    // const [filesTotalSize, setFilesTotalSize] = useState(0);
 
 
-    const handleClick = (event) => {
-        // event.preventDefault();
-        // let newArr = fileInput.current.files;
+    // const handleClick = (event) => {
+    //     // event.preventDefault();
+    //     // let newArr = fileInput.current.files;
 
-        uploadFiles(event)
-    };
+    //     uploadFiles(event)
+    // };
 
     
     return (
         <div>
-            <button onClick={openModal}>Open Modal</button>
+            <button onClick={openModal}>{openModalLabel}</button>
             <Modal
                 isOpen={modalIsOpen}
                 onAfterOpen={afterOpenModal}
@@ -78,10 +78,10 @@ const Upload = ({fileToUploadList,uploadFiles,getTotalSize,removeFile,handleInpu
                 contentLabel="Edit attachments"
             >
                 {/* <h2 ref={_subtitle => (subtitle = _subtitle)}>Hello</h2> */}
-                <button onClick={closeModal}>close</button>
+                {/* <button onClick={closeModal}>close</button> */}
                 {/* <div>I am a modal</div> */}
                 <div className="form-group">
-                    <label htmlFor="upload">Upload</label>
+                    <label htmlFor="upload">Select</label>
                     {multipleFiles && (<input
                         type="file"
                         id="file-input-id"
@@ -100,7 +100,7 @@ const Upload = ({fileToUploadList,uploadFiles,getTotalSize,removeFile,handleInpu
                     />)}
                 </div>
                 <div>
-                    <label >Total size: {getTotalSize()}</label>
+                    <label >Total size: {formatHumanReadable(getTotalSize())}</label>
                 </div>
 
                 {/* {(getTotalSize() > 0) && (<button onClick={handleClick}>Upload files!!!</button>)} */}
@@ -109,6 +109,7 @@ const Upload = ({fileToUploadList,uploadFiles,getTotalSize,removeFile,handleInpu
                     files={fileToUploadList}
                     isRemoval={true}
                     onRemove={removeFile}
+                    formatHumanReadable={formatHumanReadable}
                 />
             </Modal>
 
