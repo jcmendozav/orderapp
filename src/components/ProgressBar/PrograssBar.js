@@ -1,3 +1,7 @@
+import React from "react";
+import './ProgressBar.css'; 
+
+
 const ProgressBar = (props) => {
     const { bgcolor, completed } = props;
   
@@ -6,7 +10,7 @@ const ProgressBar = (props) => {
       width: '100%',
       backgroundColor: "#e0e0de",
       borderRadius: 50,
-      margin: 50
+      margin: 0
     }
   
     const fillerStyles = {

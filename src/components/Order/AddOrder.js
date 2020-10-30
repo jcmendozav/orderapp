@@ -12,6 +12,7 @@ import Select from 'react-select';
 // import Select from "react-select/lib/Select";
 
 import Upload from "../Attachment/Upload";
+import ProgressBar from "../ProgressBar/PrograssBar";
 
 
 // import API, { graphqlOperation } from '@aws-amplify/api';
@@ -37,11 +38,11 @@ const s3Configuration = {
 };
 Storage.configure(s3Configuration);
 
-const maxAttachmentSize = 10 * 1024 * 1024;
-const maxAttachmentNumber = 10;
+const maxAttachmentSize = 8 * 1024 * 1024; // 8MB
+const maxAttachmentNumber = 10; // TODO
 
-const maxTemplateDataFileSize = 10 * 1024 * 1024;
-const maxTemplateDataFileNumber = 1;
+const maxTemplateDataFileSize = 10 * 1024 * 1024; // 10MB
+const maxTemplateDataFileNumber = 1; // TODO
 
 const AddOrder = () => {
   const initialOrderState = {
@@ -75,6 +76,8 @@ const AddOrder = () => {
   const [validReplyToAddress, setValidReplyToAddress] = useState(true);
 
   const [progressLog, setProgressLog] = useState([]);
+
+  const [completed, setCompleted] = useState(0);
 
   const retrieveTemplates = () => {
     TemplateDataService.getAll()
@@ -268,7 +271,7 @@ const AddOrder = () => {
   }
 
   const uploadAttachments = async (event) => {
-    if(fileToAttachList && fileToAttachList.length==0) return;
+    if (fileToAttachList && fileToAttachList.length == 0) return;
     attachmentsInfo = await Promise.all(fileToAttachList.map(file => uploadToStorage(file)));
     console.log(`attachmentsInfo: ${attachmentsInfo}`);
     pushProgressLog('Attachments uploading success');
@@ -402,7 +405,6 @@ const AddOrder = () => {
   const saveOrder = async () => {
 
 
-
     const error = orderFormError(Order);
     if (error) {
       alert(error);
@@ -410,59 +412,71 @@ const AddOrder = () => {
       return;
     }
     pushProgressLog('Order form valid');
+    setCompleted(1);
 
-    await uploadAttachments();
-    await uploadTemplateDataFile();
-    // pushProgressLog('Template data uploading success');
+    try {
+
+      await uploadAttachments();
+      setCompleted(33);
+      await uploadTemplateDataFile();
+      setCompleted(66);
+
+      // return;
+
+      // pushProgressLog('Template data uploading success');
 
 
-    // console.log(`templateDataFileInfo: ${JSON.stringify(templateDataFileInfo)}`);
-    // console.log(`attachmentsInfo: ${JSON.stringify(attachmentsInfo)}`);
+      // console.log(`templateDataFileInfo: ${JSON.stringify(templateDataFileInfo)}`);
+      // console.log(`attachmentsInfo: ${JSON.stringify(attachmentsInfo)}`);
 
 
 
 
-    var data = {
-      orderType: Order.orderType,
-      userId: Auth.user.username,
-      name: Order.orderName,
-      details: {
-        scheduleDate: Order.scheduleDate.toISOString(),
-        // inputData: Order.inputData,
-        inputData: templateDataFileInfo.responseKey,
-        quota: parseInt(Order.quota),
-        time: parseInt(Order.time),
-        configuration: (Order.configuration),
-        template: (Order.template.value),
-        source: (Order.source.value),
-        sourceTitle: (Order.sourceTitle),
-        replyTo: Order.replyTo,
-        templateDataFileInfo,
-        attachmentsInfo
-      }
-    };
+      var data = {
+        orderType: Order.orderType,
+        userId: Auth.user.username,
+        name: Order.orderName,
+        details: {
+          scheduleDate: Order.scheduleDate.toISOString(),
+          // inputData: Order.inputData,
+          inputData: templateDataFileInfo.responseKey,
+          quota: parseInt(Order.quota),
+          time: parseInt(Order.time),
+          configuration: (Order.configuration),
+          template: (Order.template.value),
+          source: (Order.source.value),
+          sourceTitle: (Order.sourceTitle),
+          replyTo: Order.replyTo,
+          templateDataFileInfo,
+          attachmentsInfo
+        }
+      };
 
-    // console.log(`data request: ${JSON.stringify(data)}`);
+      // console.log(`data request: ${JSON.stringify(data)}`);
 
-    // return;
-    // if(!Order.inputData){
+      // return;
+      // if(!Order.inputData){
 
-    // }
-    await OrderDataService.create(data)
-      .then(response => {
-        setOrder({
-          id: response.data.orderId
-          // title: response.data.title,
-          // description: response.data.description,
-          // published: response.data.published
-        });
-        setSubmitted(true);
-        console.log(response.data);
-      })
-      .catch(e => {
-        console.log(e);
-        pushProgressLog(e);
+      // }
+      let response = await OrderDataService.create(data);
+
+      setOrder({
+        id: response.data.orderId
+        // title: response.data.title,
+        // description: response.data.description,
+        // published: response.data.published
       });
+      setCompleted(100);
+      pushProgressLog('Order sent');
+
+      await new Promise(r => setTimeout(r, 2000));
+
+      setSubmitted(true);
+
+    } catch (e) {
+      console.log(e);
+      pushProgressLog(e);
+    }
 
     // console.log("API.post :"+apiName);
 
@@ -671,11 +685,12 @@ const AddOrder = () => {
 
             </div>
             <div>
-              {progressLog.length>0 &&
+              {progressLog.length > 0 &&
                 <label className='inProgress'>{getProgressLog()}</label>
 
               }
             </div>
+
             <div>
               {Order.inputData &&
                 <label className='success'>File uploaded successfully</label>
@@ -689,10 +704,16 @@ const AddOrder = () => {
               }
             </div>
             <div>
+
             </div>
+
+
             <button onClick={saveOrder} className="btn btn-success">
               Submit
           </button>
+            <p></p>
+            {completed > 0 && <div><ProgressBar bgcolor={"#6a1b9a"} completed={completed} /></div>}
+
           </div>
 
         )
