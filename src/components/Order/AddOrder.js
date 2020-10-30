@@ -461,6 +461,7 @@ const AddOrder = () => {
       })
       .catch(e => {
         console.log(e);
+        pushProgressLog(e);
       });
 
     // console.log("API.post :"+apiName);
